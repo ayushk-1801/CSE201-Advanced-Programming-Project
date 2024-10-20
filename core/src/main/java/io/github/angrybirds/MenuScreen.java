@@ -47,7 +47,7 @@ public class MenuScreen implements Screen {
         startButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new LevelsScreen());
+                ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new LevelSelectScreen());
             }
         });
 

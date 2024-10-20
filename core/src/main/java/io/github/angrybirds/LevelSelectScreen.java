@@ -15,9 +15,9 @@ public class LevelSelectScreen implements Screen {
     private Texture bgImage;
     private Stage stage;
     private Skin skin;
-    private Image title; 
-    private Image level1Button; 
-    private Image level2Button; 
+    private Image title;
+    private Image level1Button;
+    private Image level2Button;
     private Image level3Button;
 
     @Override
@@ -30,23 +30,23 @@ public class LevelSelectScreen implements Screen {
 
         skin = new Skin(Gdx.files.internal("uiskin.json")); // Use your skin
 
-        Texture titleTexture = new Texture("logo.png"); 
+        Texture titleTexture = new Texture("ui/logo.png");
         title = new Image(titleTexture);
         title.setSize(titleTexture.getWidth(), titleTexture.getHeight());
         title.setPosition(Gdx.graphics.getWidth() / 2f - title.getWidth() / 2, Gdx.graphics.getHeight() - title.getHeight() - 50);
 
-        Texture level1Texture = new Texture("assets\\ui\\download (1).png"); // Add level button image
+        Texture level1Texture = new Texture("ui/download (1).png"); // Add level button image
         level1Button = new Image(level1Texture);
         level1Button.setScaling(Scaling.fit);
         level1Button.setPosition(Gdx.graphics.getWidth() / 2f - level1Button.getWidth() / 2, Gdx.graphics.getHeight() / 2f + 40);
 
         // Static button for Level 2
-        Texture level2Texture = new Texture("assets\\ui\\download.png"); // Add level button image
+        Texture level2Texture = new Texture("ui/download.png"); // Add level button image
         level2Button = new Image(level2Texture);
         level2Button.setScaling(Scaling.fit);
         level2Button.setPosition(Gdx.graphics.getWidth() / 2f - level2Button.getWidth() / 2, Gdx.graphics.getHeight() / 2f - 40);
 
-        Texture level3Texture = new Texture("assets\\ui\\download.jpg"); 
+        Texture level3Texture = new Texture("ui/download.jpg");
         level3Button = new Image(level3Texture);
         level3Button.setScaling(Scaling.fit);
         level3Button.setPosition(Gdx.graphics.getWidth() / 2f - level3Button.getWidth() / 2, Gdx.graphics.getHeight() / 2f - 120);
