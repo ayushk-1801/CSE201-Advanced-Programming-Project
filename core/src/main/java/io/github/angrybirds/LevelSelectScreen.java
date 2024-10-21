@@ -7,7 +7,6 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 public class LevelSelectScreen implements Screen {
@@ -16,9 +15,7 @@ public class LevelSelectScreen implements Screen {
     private Stage stage;
     private Skin skin;
     private Image title;
-    private Image level1Button;
-    private Image level2Button;
-    private Image level3Button;
+    private Image level1Button, level2Button, level3Button;
 
     @Override
     public void show() {
@@ -30,27 +27,40 @@ public class LevelSelectScreen implements Screen {
 
         skin = new Skin(Gdx.files.internal("uiskin.json")); // Use your skin
 
+        // Title for the level select screen
         Texture titleTexture = new Texture("ui/logo.png");
         title = new Image(titleTexture);
         title.setSize(titleTexture.getWidth(), titleTexture.getHeight());
         title.setPosition(Gdx.graphics.getWidth() / 2f - title.getWidth() / 2, Gdx.graphics.getHeight() - title.getHeight() - 50);
 
-        Texture level1Texture = new Texture("ui/download (1).png"); // Add level button image
-        level1Button = new Image(level1Texture);
-        level1Button.setScaling(Scaling.fit);
-        level1Button.setPosition(Gdx.graphics.getWidth() / 2f - level1Button.getWidth() / 2, Gdx.graphics.getHeight() / 2f + 40);
-
-        // Static button for Level 2
-        Texture level2Texture = new Texture("ui/download.png"); // Add level button image
-        level2Button = new Image(level2Texture);
-        level2Button.setScaling(Scaling.fit);
-        level2Button.setPosition(Gdx.graphics.getWidth() / 2f - level2Button.getWidth() / 2, Gdx.graphics.getHeight() / 2f - 40);
-
+        // Load textures for level buttons
+        Texture level1Texture = new Texture("ui/download (1).png");
+        Texture level2Texture = new Texture("ui/download.png");
         Texture level3Texture = new Texture("ui/download.jpg");
-        level3Button = new Image(level3Texture);
-        level3Button.setScaling(Scaling.fit);
-        level3Button.setPosition(Gdx.graphics.getWidth() / 2f - level3Button.getWidth() / 2, Gdx.graphics.getHeight() / 2f - 120);
 
+        // Create and scale down level buttons
+        level1Button = new Image(level1Texture);
+        level2Button = new Image(level2Texture);
+        level3Button = new Image(level3Texture);
+
+        level1Button.setSize(150, 150);  // Reduce size for better layout
+        level2Button.setSize(150, 150);
+        level3Button.setSize(150, 150);
+
+        // Position buttons horizontally (spaced evenly)
+        float spacing = 50; // Space between buttons
+        float totalWidth = level1Button.getWidth() * 3 + spacing * 2; // Total width for all buttons with spacing
+
+        // Calculate starting X position to center the buttons
+        float startX = Gdx.graphics.getWidth() / 2f - totalWidth / 2f;
+        float buttonY = Gdx.graphics.getHeight() / 2f - level1Button.getHeight() / 2;
+
+        // Set positions for the buttons
+        level1Button.setPosition(startX, buttonY);
+        level2Button.setPosition(startX + level1Button.getWidth() + spacing, buttonY);
+        level3Button.setPosition(startX + (level1Button.getWidth() + spacing) * 2, buttonY);
+
+        // Add actors to the stage
         stage.addActor(title);
         stage.addActor(level1Button);
         stage.addActor(level2Button);
