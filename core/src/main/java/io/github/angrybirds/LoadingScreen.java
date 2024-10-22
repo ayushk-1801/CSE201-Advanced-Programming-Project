@@ -4,7 +4,10 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 public class LoadingScreen implements Screen {
     private SpriteBatch batch;
@@ -14,7 +17,7 @@ public class LoadingScreen implements Screen {
     @Override
     public void show() {
         batch = new SpriteBatch();
-        splashImage = new Texture("ui/2.png");
+        splashImage = new Texture("background/loading.png");
         elapsedTime = 0;
     }
 
@@ -26,9 +29,10 @@ public class LoadingScreen implements Screen {
         batch.draw(splashImage, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         batch.end();
 
-        if (elapsedTime > 3) {
+        if (elapsedTime > 0) {
             ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new MenuScreen());
         }
+
     }
 
     @Override

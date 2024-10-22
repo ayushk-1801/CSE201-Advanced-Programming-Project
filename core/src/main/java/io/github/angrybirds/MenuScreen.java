@@ -25,7 +25,7 @@ public class MenuScreen implements Screen {
     @Override
     public void show() {
         batch = new SpriteBatch();
-        bgImage = new Texture("ui/bg.png");
+        bgImage = new Texture("background/level_bg.png");
 
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
@@ -39,11 +39,11 @@ public class MenuScreen implements Screen {
         logo.setPosition(Gdx.graphics.getWidth() / 2f - logo.getWidth() / 2, Gdx.graphics.getHeight() - logo.getHeight() - 80);
 
 
-        Texture startTexture = new Texture("buttons/play.png");
+        Texture startTexture = new Texture("buttons/play.jpg");
         startButton = new Image(startTexture);
-        startButton.setSize(700, 800);
+        startButton.setSize(300, 400);
         startButton.setScaling(Scaling.fit);
-        startButton.setPosition(Gdx.graphics.getWidth() / 2f - startButton.getWidth() / 2, 100);
+        startButton.setPosition(Gdx.graphics.getWidth() / 2f - startButton.getWidth() / 2, 400);
         startButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -51,16 +51,10 @@ public class MenuScreen implements Screen {
             }
         });
 
-        startButton.addAction(Actions.forever(
-            Actions.sequence(
-                Actions.scaleTo(1.01f, 1.01f, 0.5f),
-                Actions.scaleTo(1f, 1f, 0.5f)
-            )
-        ));
 
         Texture exitTexture = new Texture("buttons/exit.png");
         exitButton = new Image(exitTexture);
-        exitButton.setPosition(Gdx.graphics.getWidth() - exitButton.getWidth() - 50, 50);
+        exitButton.setPosition(Gdx.graphics.getWidth() - exitButton.getWidth() - 20, 20);
         exitButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
