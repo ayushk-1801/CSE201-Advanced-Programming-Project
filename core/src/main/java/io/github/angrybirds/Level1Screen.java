@@ -27,28 +27,32 @@ public class Level1Screen implements Screen {
         Gdx.input.setInputProcessor(stage);
 
         // Load textures for the slingshot, pig, and fort elements
-        Texture pigTexture = new Texture("assets/birds_piggies/normal_pig.png");
-        Texture woodVerticalTexture = new Texture("assets/materials/vertical wood block.png");
-        Texture woodHorizontalTexture = new Texture("assets/materials/horizontal wood block.png");
-        Texture slingshotTexture = new Texture("assets/slingshot.png");
+        Texture pigTexture = new Texture("birds_piggies/normal_pig.png");
+        Texture woodVerticalTexture = new Texture("materials/vertical wood block.png");
+        Texture woodHorizontalTexture = new Texture("materials/horizontal wood block.png");
+        Texture slingshotTexture = new Texture("birds_piggies/slingshot.png");
 
         // Create the pig and position it inside the fort
         pig = new Image(pigTexture);
         pig.setPosition(Gdx.graphics.getWidth() / 2f - pig.getWidth() / 2, Gdx.graphics.getHeight() / 2f);
-
+        pig.moveBy(400,-400);
         // Create two vertical wood blocks (fort sides)
         woodVertical1 = new Image(woodVerticalTexture);
         woodVertical2 = new Image(woodVerticalTexture);
         woodVertical1.setPosition(Gdx.graphics.getWidth() / 2f - 80, pig.getY() - 30);
         woodVertical2.setPosition(Gdx.graphics.getWidth() / 2f + pig.getWidth() - 30, pig.getY() - 30);
-
+        woodVertical1.moveBy(400,35);
+        woodVertical2.moveBy(400,35);
         // Create a horizontal wood block (fort top)
         woodHorizontal = new Image(woodHorizontalTexture);
         woodHorizontal.setPosition(Gdx.graphics.getWidth() / 2f - 20, pig.getY() + pig.getHeight() - 10);
+        woodHorizontal.moveBy(310,115);
 
-        // Create the slingshot and position it on the left side of the screen
+        // Create the slingshot and position it on the left side of the screen, scaled down to 1/10th size
         slingshot = new Image(slingshotTexture);
+        slingshot.setSize(slingshot.getWidth() / 5, slingshot.getHeight() / 5);  // Scale down
         slingshot.setPosition(100, Gdx.graphics.getHeight() / 2f - slingshot.getHeight() / 2);
+        slingshot.moveBy(200,-330);
 
         // Add actors to the stage
         stage.addActor(slingshot);
