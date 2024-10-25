@@ -6,6 +6,13 @@ public abstract class Bird {
     private int impactRadius;
     private boolean isAbilityActive;
 
+    public Bird() {
+        this.weight = 0;
+        this.velocity = 0;
+        this.impactRadius = 0;
+        this.isAbilityActive = false;
+    }
+
     public int getWeight() {
         return weight;
     }

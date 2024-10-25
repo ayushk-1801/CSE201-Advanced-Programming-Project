@@ -21,7 +21,7 @@ public class Level1Screen implements Screen {
     @Override
     public void show() {
         batch = new SpriteBatch();
-        bgImage = new Texture("ui/level_bg.png"); // Background for the level
+        bgImage = new Texture("background/level_bg.png"); // Background for the level
 
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
