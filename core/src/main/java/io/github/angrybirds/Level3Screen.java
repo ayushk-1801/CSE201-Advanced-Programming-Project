@@ -24,6 +24,7 @@ public class Level3Screen implements Screen {
     private Image block1; // Stone block on top of stone fort
     private Image pause;
     private Image skip;
+    private Image redBird, chuckBird, bombBird;
 
     @Override
     public void show() {
