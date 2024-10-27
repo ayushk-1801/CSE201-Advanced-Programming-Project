@@ -22,7 +22,7 @@ public class Level2Screen implements Screen {
     private Image slingshot;
     private Image pause;
     private Image skip;
-
+    private Image redBird, chuckBird, bombBird;
     @Override
     public void show() {
         batch = new SpriteBatch();
@@ -40,6 +40,9 @@ public class Level2Screen implements Screen {
         Texture slingshotTexture = new Texture("birds_piggies/slingshot.png");
         Texture pauseTexture = new Texture("buttons/pause.png");
         Texture skipTexture = new Texture("buttons/skip.png");
+        Texture redBirdTexture = new Texture("birds_piggies/red.png");
+        Texture chuckBirdTexture = new Texture("birds_piggies/chuck.png");
+        Texture bombBirdTexture = new Texture("birds_piggies/bomb.png");
 
         // Create the pigs and position them
         pig1 = new Image(pigTexture);
@@ -73,6 +76,17 @@ public class Level2Screen implements Screen {
         slingshot.setSize(slingshot.getWidth() / 5, slingshot.getHeight() / 5);
         slingshot.setPosition(100, Gdx.graphics.getHeight() / 2f - slingshot.getHeight() / 2);
         slingshot.moveBy(200, -330);
+        
+        redBird = new Image(redBirdTexture);
+        redBird.setPosition(200, slingshot.getY() );
+        redBird.setSize(redBird.getWidth()/5,redBird.getHeight()/5);
+
+        chuckBird = new Image(chuckBirdTexture);
+        chuckBird.setPosition(160,  slingshot.getY());
+        chuckBird.setSize(redBird.getWidth(),redBird.getHeight());
+        bombBird = new Image(bombBirdTexture);
+        bombBird.setPosition(120,  slingshot.getY());
+        bombBird.setSize(redBird.getWidth(),redBird.getHeight());
 
         // Create the pause button and position it at the top right corner of the screen
         pause = new Image(pauseTexture);
@@ -106,6 +120,9 @@ public class Level2Screen implements Screen {
         stage.addActor(pig2);
         stage.addActor(pause);
         stage.addActor(skip);
+        stage.addActor(redBird);
+        stage.addActor(chuckBird);
+        stage.addActor(bombBird);
     }
 
     @Override
