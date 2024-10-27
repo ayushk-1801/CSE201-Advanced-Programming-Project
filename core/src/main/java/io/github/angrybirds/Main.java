@@ -6,6 +6,8 @@ import com.badlogic.gdx.Game;
 public class Main extends Game {
     @Override
     public void create() {
+        GameProgress gameProgress = new GameProgress();
+        gameProgress.resetProgress();
         setScreen(new LoadingScreen());
     }
 }

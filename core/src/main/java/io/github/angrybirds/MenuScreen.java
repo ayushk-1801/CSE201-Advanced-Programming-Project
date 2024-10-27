@@ -25,7 +25,7 @@ public class MenuScreen implements Screen {
     @Override
     public void show() {
         batch = new SpriteBatch();
-        bgImage = new Texture("background/level_bg.png");
+        bgImage = new Texture("background/menu_bg.jpeg");
 
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
@@ -39,9 +39,9 @@ public class MenuScreen implements Screen {
         logo.setPosition(Gdx.graphics.getWidth() / 2f - logo.getWidth() / 2, Gdx.graphics.getHeight() - logo.getHeight() - 80);
 
 
-        Texture startTexture = new Texture("buttons/play.jpg");
+        Texture startTexture = new Texture("buttons/play2.png");
         startButton = new Image(startTexture);
-        startButton.setSize(300, 400);
+        startButton.setSize(400, 400);
         startButton.setScaling(Scaling.fit);
         startButton.setPosition(Gdx.graphics.getWidth() / 2f - startButton.getWidth() / 2, 400);
         startButton.addListener(new ClickListener() {

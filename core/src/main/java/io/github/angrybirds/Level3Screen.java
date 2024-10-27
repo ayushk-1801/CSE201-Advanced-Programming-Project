@@ -14,9 +14,9 @@ public class Level3Screen implements Screen {
     private Stage stage;
 
     // Images for pigs, wood blocks, stone blocks, and slingshot
-    private Image pig1, pig2, helmetPig, helmetPigOnBlock, gunPig; 
+    private Image pig1, pig2, helmetPig, helmetPigOnBlock, gunPig;
     private Image woodVertical1, woodVertical2, woodHorizontal;
-    private Image stoneVertical1, stoneVertical2, stoneHorizontal; 
+    private Image stoneVertical1, stoneVertical2, stoneHorizontal;
     private Image slingshot;
     private Image block1; // Stone block on top of stone fort
 

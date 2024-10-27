@@ -20,16 +20,18 @@ public class LevelSelectScreen implements Screen {
     private Image level1Button, level2Button, level3Button;
     private Image backButton;
     private Image title;
+    private GameProgress gameProgress;
 
     @Override
     public void show() {
         batch = new SpriteBatch();
-        bgImage = new Texture("background/level_bg.png"); // Same background as MenuScreen
+        bgImage = new Texture("background/level_bg.png");
 
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
 
-        skin = new Skin(Gdx.files.internal("uiskin.json")); // Use your skin
+        skin = new Skin(Gdx.files.internal("uiskin.json"));
+        gameProgress = new GameProgress();
 
         // Load textures for level buttons
         Texture level1Texture = new Texture("buttons/level1.png");
@@ -37,7 +39,7 @@ public class LevelSelectScreen implements Screen {
         Texture level3Texture = new Texture("buttons/level3.png");
         Texture backTexture = new Texture("buttons/back.png");
         Texture titleTexture = new Texture("ui/sel_level.png");
-        System.out.println("\u001B[32mWho am I?");
+
         // Create and scale down level buttons
         level1Button = new Image(level1Texture);
         level2Button = new Image(level2Texture);
@@ -45,7 +47,7 @@ public class LevelSelectScreen implements Screen {
         backButton = new Image(backTexture);
         title = new Image(titleTexture);
 
-        level1Button.setSize(500, 500);  // Reduce size for better layout
+        level1Button.setSize(500, 500);
         level2Button.setSize(500, 500);
         level3Button.setSize(500, 500);
         backButton.setSize(150, 150);
@@ -53,38 +55,46 @@ public class LevelSelectScreen implements Screen {
         title.setScaling(Scaling.fit);
 
         // Position buttons horizontally (spaced evenly)
-        float spacing = 50; // Space between buttons
-        float totalWidth = level1Button.getWidth() * 3 + spacing * 2; // Total width for all buttons with spacing
-
-        // Calculate starting X position to center the buttons
+        float spacing = 50;
+        float totalWidth = level1Button.getWidth() * 3 + spacing * 2;
         float startX = Gdx.graphics.getWidth() / 2f - totalWidth / 2f;
         float buttonY = Gdx.graphics.getHeight() / 2f - level1Button.getHeight() / 2;
 
-        // Set positions for the buttons
         level1Button.setPosition(startX, buttonY);
         level2Button.setPosition(startX + level1Button.getWidth() + spacing, buttonY);
         level3Button.setPosition(startX + (level1Button.getWidth() + spacing) * 2, buttonY);
-        backButton.setPosition( 50,  Gdx.graphics.getHeight() - backButton.getHeight() - 50);
+        backButton.setPosition(50, Gdx.graphics.getHeight() - backButton.getHeight() - 50);
         title.setPosition(Gdx.graphics.getWidth() / 2f - title.getWidth() / 2, Gdx.graphics.getHeight() - title.getHeight() + 30);
 
+        // Add listeners to buttons
         level1Button.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new Level1Screen());
             }
         });
-//        level2Button.addListener(new ClickListener() {
-//            @Override
-//            public void clicked(InputEvent event, float x, float y) {
-//                ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new Level2Screen());
-//            }
-//        });
-//        level3Button.addListener(new ClickListener() {
-//            @Override
-//            public void clicked(InputEvent event, float x, float y) {
-//                ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new Level3Screen());
-//            }
-//        });
+
+        if (gameProgress.getUnlockedLevel() >= 2) {
+            level2Button.addListener(new ClickListener() {
+                @Override
+                public void clicked(InputEvent event, float x, float y) {
+                    ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new Level2Screen());
+                }
+            });
+        } else {
+            level2Button.setColor(1, 1, 1, 0.5f); // Dim the button to indicate it's locked
+        }
+
+        if (gameProgress.getUnlockedLevel() >= 3) {
+            level3Button.addListener(new ClickListener() {
+                @Override
+                public void clicked(InputEvent event, float x, float y) {
+                    ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new Level3Screen());
+                }
+            });
+        } else {
+            level3Button.setColor(1, 1, 1, 0.5f); // Dim the button to indicate it's locked
+        }
 
         backButton.addListener(new ClickListener() {
             @Override
