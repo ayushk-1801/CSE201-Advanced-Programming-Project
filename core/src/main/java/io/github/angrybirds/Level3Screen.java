@@ -4,26 +4,32 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 public class Level3Screen implements Screen {
     private SpriteBatch batch;
     private Texture bgImage;
     private Stage stage;
+    private GameProgress gameProgress;
 
-    // Images for pigs, wood blocks, stone blocks, and slingshot
+    // Images for pigs, wood blocks, stone blocks, slingshot, pause, and skip buttons
     private Image pig1, pig2, helmetPig, helmetPigOnBlock, gunPig;
     private Image woodVertical1, woodVertical2, woodHorizontal;
     private Image stoneVertical1, stoneVertical2, stoneHorizontal;
     private Image slingshot;
     private Image block1; // Stone block on top of stone fort
+    private Image pause;
+    private Image skip;
 
     @Override
     public void show() {
         batch = new SpriteBatch();
         bgImage = new Texture("background/level_bg.png");
+        gameProgress = new GameProgress();
 
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
@@ -38,6 +44,8 @@ public class Level3Screen implements Screen {
         Texture stoneHorizontalTexture = new Texture("materials/horizontal_stone.png");
         Texture slingshotTexture = new Texture("birds_piggies/slingshot.png");
         Texture blockTexture = new Texture("materials/ice_block.png");
+        Texture pauseTexture = new Texture("buttons/pause.png");
+        Texture skipTexture = new Texture("buttons/skip.png");
 
         // Create the pigs and position them
         pig1 = new Image(pigTexture);
@@ -105,6 +113,28 @@ public class Level3Screen implements Screen {
         slingshot.setPosition(100, Gdx.graphics.getHeight() / 2f - slingshot.getHeight() / 2);
         slingshot.moveBy(200, -330);
 
+        // Create the pause button and position it at the top right corner of the screen
+        pause = new Image(pauseTexture);
+        pause.setPosition(20, Gdx.graphics.getHeight() - pause.getHeight() - 80);
+        pause.setSize(150, 150);
+        pause.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new PauseScreen3());
+            }
+        });
+
+        // Create the skip button and position it at the bottom right corner of the screen
+        skip = new Image(skipTexture);
+        skip.setPosition(Gdx.graphics.getWidth() - skip.getWidth() - 20, 20);
+        skip.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                gameProgress.unlockNextLevel();
+                ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new VictoryMenu3());
+            }
+        });
+
         // Add actors to the stage
         stage.addActor(slingshot);
         stage.addActor(woodVertical1);
@@ -119,6 +149,8 @@ public class Level3Screen implements Screen {
         stage.addActor(pig1);
         stage.addActor(helmetPig);
         stage.addActor(pig2);
+        stage.addActor(pause);
+        stage.addActor(skip);
     }
 
     @Override
@@ -129,6 +161,16 @@ public class Level3Screen implements Screen {
 
         stage.act(delta);
         stage.draw();
+
+        if (isLevelCompleted()) {
+            gameProgress.unlockNextLevel();
+            ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new VictoryMenu1());
+        }
+    }
+
+    private boolean isLevelCompleted() {
+        // Implement your logic to check if the level is completed
+        return false;
     }
 
     @Override

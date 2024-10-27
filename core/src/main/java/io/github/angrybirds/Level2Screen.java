@@ -92,7 +92,7 @@ public class Level2Screen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 gameProgress.unlockNextLevel();
-                ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new MenuScreen());
+                ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new VictoryMenu2());
             }
         });
 
@@ -119,7 +119,7 @@ public class Level2Screen implements Screen {
 
         if (isLevelCompleted()) {
             gameProgress.unlockNextLevel();
-            ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new VictoryMenu());
+            ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new VictoryMenu1());
         }
     }
 

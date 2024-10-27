@@ -9,7 +9,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
-public class VictoryMenu implements Screen {
+public class VictoryMenu1 implements Screen {
     private Stage stage;
     private Image bg;
     private Image resumeButton;
@@ -80,7 +80,6 @@ public class VictoryMenu implements Screen {
         stage.addActor(resumeButton);
         stage.addActor(menuButton);
         stage.addActor(restartButton);
-        stage.addActor(vicotryImage);
     }
 
     @Override
