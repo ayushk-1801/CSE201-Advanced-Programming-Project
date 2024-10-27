@@ -29,7 +29,7 @@ public class LoadingScreen implements Screen {
         batch.draw(splashImage, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         batch.end();
 
-        if (elapsedTime > 0) {
+        if (elapsedTime > 3) {
             ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new MenuScreen());
         }
 
