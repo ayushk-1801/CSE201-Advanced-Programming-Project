@@ -22,6 +22,7 @@ public class Level1Screen implements Screen {
     private Image slingshot;
     private Image pause;
     private Image skip;
+    private Image redBird, chuckBird, bombBird; 
 
     @Override
     public void show() {
@@ -39,7 +40,9 @@ public class Level1Screen implements Screen {
         Texture slingshotTexture = new Texture("birds_piggies/slingshot.png");
         Texture skipTexture = new Texture("buttons/skip.png");
         Texture pauseTexture = new Texture("buttons/pause.png");
-
+        Texture redBirdTexture = new Texture("birds_piggies/red.png");
+        Texture chuckBirdTexture = new Texture("birds_piggies/chuck.png");
+        Texture bombBirdTexture = new Texture("birds_piggies/bomb.png");
         // Create the pig and position it inside the fort
         pig = new Image(pigTexture);
         pig.setPosition(Gdx.graphics.getWidth() / 2f - pig.getWidth() / 2, Gdx.graphics.getHeight() / 2f);
@@ -64,6 +67,16 @@ public class Level1Screen implements Screen {
         slingshot.setPosition(100, Gdx.graphics.getHeight() / 2f - slingshot.getHeight() / 2);
         slingshot.moveBy(200, -330);
 
+         redBird = new Image(redBirdTexture);
+        redBird.setPosition(200, slingshot.getY() );
+        redBird.setSize(redBird.getWidth()/5,redBird.getHeight()/5);
+
+        chuckBird = new Image(chuckBirdTexture);
+        chuckBird.setPosition(160,  slingshot.getY());
+        chuckBird.setSize(redBird.getWidth(),redBird.getHeight());
+        bombBird = new Image(bombBirdTexture);
+        bombBird.setPosition(120,  slingshot.getY());
+        bombBird.setSize(redBird.getWidth(),redBird.getHeight());
         // Create the pause button and position it at the top right corner of the screen
         pause = new Image(pauseTexture);
         pause.setPosition(20, Gdx.graphics.getHeight() - pause.getHeight() - 80);
@@ -94,6 +107,7 @@ public class Level1Screen implements Screen {
         stage.addActor(pig);
         stage.addActor(pause);
         stage.addActor(skip);
+        
     }
 
     @Override
