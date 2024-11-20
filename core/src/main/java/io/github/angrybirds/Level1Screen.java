@@ -5,6 +5,7 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Cursor;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
@@ -52,7 +53,9 @@ public class Level1Screen implements Screen {
     private Body selectedBirdBody;
     private Image selectedBird;
 
-    private float FRICTION = 10f;
+    private float FRICTION = 5f;
+    private float DENSITY = 1f;
+    private float RESTITUTION = 0.8f;
 
     @Override
     public void show() {
@@ -84,7 +87,7 @@ public class Level1Screen implements Screen {
         pig = new Image(pigTexture);
         pig.setPosition(Gdx.graphics.getWidth() / 2f - pig.getWidth() / 2, Gdx.graphics.getHeight() / 2f);
         pig.moveBy(400, -400);
-        pigBody = createCircularBody(pig, 0.5f, FRICTION, 0.6f);
+        pigBody = createCircularBody(pig, DENSITY, FRICTION, RESTITUTION);
 
         // Create two vertical wood blocks (fort sides)
         woodVertical1 = new Image(woodVerticalTexture);
@@ -93,14 +96,14 @@ public class Level1Screen implements Screen {
         woodVertical2.setPosition(Gdx.graphics.getWidth() / 2f + pig.getWidth() - 30, pig.getY() - 30);
         woodVertical1.moveBy(400, 35);
         woodVertical2.moveBy(400, 35);
-        woodVertical1Body = createRectangularBody(woodVertical1, false, 0.8f, FRICTION, 0.3f);
-        woodVertical2Body = createRectangularBody(woodVertical2, false, 0.8f, FRICTION, 0.3f);
+        woodVertical1Body = createRectangularBody(woodVertical1, false, DENSITY, FRICTION, RESTITUTION);
+        woodVertical2Body = createRectangularBody(woodVertical2, false, DENSITY, FRICTION, RESTITUTION);
 
         // Create a horizontal wood block (fort top)
         woodHorizontal = new Image(woodHorizontalTexture);
         woodHorizontal.setPosition(Gdx.graphics.getWidth() / 2f - 20, pig.getY() + pig.getHeight() - 10);
         woodHorizontal.moveBy(310, 115);
-        woodHorizontalBody = createRectangularBody(woodHorizontal, false, 0.8f, FRICTION, 0.3f);
+        woodHorizontalBody = createRectangularBody(woodHorizontal, false, DENSITY, FRICTION, RESTITUTION);
 
         // Create the slingshot and position it on the left side of the screen
         slingshot = new Image(slingshotTexture);
@@ -110,19 +113,19 @@ public class Level1Screen implements Screen {
 
         // Create the birds and their physics bodies
         redBird = new Image(redBirdTexture);
-        redBird.setPosition(200, slingshot.getY());
         redBird.setSize(redBird.getWidth() / 5, redBird.getHeight() / 5);
-        redBirdBody = createCircularBody(redBird, 1f, FRICTION, 0.5f);
+        redBird.setPosition(catapultPosition.x - redBird.getWidth() / 2, catapultPosition.y - redBird.getHeight() / 2);
+        redBirdBody = createCircularBody(redBird, DENSITY, FRICTION, RESTITUTION);
 
         chuckBird = new Image(chuckBirdTexture);
         chuckBird.setPosition(160, slingshot.getY());
         chuckBird.setSize(redBird.getWidth(), redBird.getHeight());
-        chuckBirdBody = createCircularBody(chuckBird, 1f, FRICTION, 0.5f);
+        chuckBirdBody = createCircularBody(chuckBird, DENSITY, FRICTION, RESTITUTION);
 
         bombBird = new Image(bombBirdTexture);
         bombBird.setPosition(120, slingshot.getY());
         bombBird.setSize(redBird.getWidth(), redBird.getHeight());
-        bombBirdBody = createCircularBody(bombBird, 1f, FRICTION, 0.5f);
+        bombBirdBody = createCircularBody(bombBird, DENSITY, FRICTION, RESTITUTION);
 
         // Create the pause button
         pause = new Image(pauseTexture);
