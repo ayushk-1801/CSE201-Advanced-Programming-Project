@@ -17,6 +17,7 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+
 public class Level1Screen implements Screen {
     private SpriteBatch batch;
     private Texture bgImage;
@@ -45,12 +46,13 @@ public class Level1Screen implements Screen {
     private Image redBird, chuckBird, bombBird;
 
     // Input management for bird launch
-private boolean isDragging;
-private Vector2 initialTouchPosition;
-private Vector2 dragPosition;
-private Body selectedBirdBody;
-private Image selectedBird;
+    private boolean isDragging;
+    private Vector2 initialTouchPosition;
+    private Vector2 dragPosition;
+    private Body selectedBirdBody;
+    private Image selectedBird;
 
+    private float FRICTION = 10f;
 
     @Override
     public void show() {
@@ -69,8 +71,8 @@ private Image selectedBird;
 
         // Load textures for the slingshot, pig, and fort elements
         Texture pigTexture = new Texture("birds_piggies/normal_pig.png");
-        Texture woodVerticalTexture = new Texture("materials/vertical wood block.png");
-        Texture woodHorizontalTexture = new Texture("materials/horizontal wood block.png");
+        Texture woodVerticalTexture = new Texture("materials/vertical_wood.png");
+        Texture woodHorizontalTexture = new Texture("materials/horizontal_wood.png");
         Texture slingshotTexture = new Texture("birds_piggies/slingshot.png");
         Texture skipTexture = new Texture("buttons/skip.png");
         Texture pauseTexture = new Texture("buttons/pause.png");
@@ -82,7 +84,7 @@ private Image selectedBird;
         pig = new Image(pigTexture);
         pig.setPosition(Gdx.graphics.getWidth() / 2f - pig.getWidth() / 2, Gdx.graphics.getHeight() / 2f);
         pig.moveBy(400, -400);
-        pigBody = createCircularBody(pig, 1f, 0.4f, 0.9f);
+        pigBody = createCircularBody(pig, 0.5f, FRICTION, 0.6f);
 
         // Create two vertical wood blocks (fort sides)
         woodVertical1 = new Image(woodVerticalTexture);
@@ -91,14 +93,14 @@ private Image selectedBird;
         woodVertical2.setPosition(Gdx.graphics.getWidth() / 2f + pig.getWidth() - 30, pig.getY() - 30);
         woodVertical1.moveBy(400, 35);
         woodVertical2.moveBy(400, 35);
-        woodVertical1Body = createRectangularBody(woodVertical1, false, 1f, 0.5f, 0.3f);
-        woodVertical2Body = createRectangularBody(woodVertical2, false, 1f, 0.5f, 0.3f);
+        woodVertical1Body = createRectangularBody(woodVertical1, false, 0.8f, FRICTION, 0.3f);
+        woodVertical2Body = createRectangularBody(woodVertical2, false, 0.8f, FRICTION, 0.3f);
 
         // Create a horizontal wood block (fort top)
         woodHorizontal = new Image(woodHorizontalTexture);
         woodHorizontal.setPosition(Gdx.graphics.getWidth() / 2f - 20, pig.getY() + pig.getHeight() - 10);
         woodHorizontal.moveBy(310, 115);
-        woodHorizontalBody = createRectangularBody(woodHorizontal, false, 1f, 0.5f, 0.3f);
+        woodHorizontalBody = createRectangularBody(woodHorizontal, false, 0.8f, FRICTION, 0.3f);
 
         // Create the slingshot and position it on the left side of the screen
         slingshot = new Image(slingshotTexture);
@@ -110,17 +112,17 @@ private Image selectedBird;
         redBird = new Image(redBirdTexture);
         redBird.setPosition(200, slingshot.getY());
         redBird.setSize(redBird.getWidth() / 5, redBird.getHeight() / 5);
-        redBirdBody = createCircularBody(redBird, 1f, 0.4f, 0.5f);
+        redBirdBody = createCircularBody(redBird, 1f, FRICTION, 0.5f);
 
         chuckBird = new Image(chuckBirdTexture);
         chuckBird.setPosition(160, slingshot.getY());
         chuckBird.setSize(redBird.getWidth(), redBird.getHeight());
-        chuckBirdBody = createCircularBody(chuckBird, 1f, 0.4f, 0.5f);
+        chuckBirdBody = createCircularBody(chuckBird, 1f, FRICTION, 0.5f);
 
         bombBird = new Image(bombBirdTexture);
         bombBird.setPosition(120, slingshot.getY());
         bombBird.setSize(redBird.getWidth(), redBird.getHeight());
-        bombBirdBody = createCircularBody(bombBird, 1f, 0.4f, 0.5f);
+        bombBirdBody = createCircularBody(bombBird, 1f, FRICTION, 0.5f);
 
         // Create the pause button
         pause = new Image(pauseTexture);
@@ -156,59 +158,58 @@ private Image selectedBird;
         //stage.addActor(chuckBird);
         //stage.addActor(bombBird);
     }
+
     private Vector2 catapultPosition = new Vector2(300, 150); // Adjust to match your slingshot position
-private float catapultRadius = 100f; // Area around the slingshot where dragging is allowed
+    private float catapultRadius = 100f; // Area around the slingshot where dragging is allowed
 
-private void handleInput() {
-    Vector2 touchPos = new Vector2(Gdx.input.getX(), Gdx.input.getY());
-    stage.getViewport().unproject(touchPos); // Convert screen coordinates to world coordinates
+    private void handleInput() {
+        Vector2 touchPos = new Vector2(Gdx.input.getX(), Gdx.input.getY());
+        stage.getViewport().unproject(touchPos); // Convert screen coordinates to world coordinates
 
-    if (touchPos.dst(catapultPosition) <= catapultRadius) {
-        Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Hand); // Set hand cursor
-    } else {
-        Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Arrow); // Reset to default cursor
-    }
-    if (Gdx.input.isTouched()) {
-       
-        // Start dragging if inside the catapult area and no bird is currently being dragged
-        if (!isDragging) {
-            if (touchPos.dst(catapultPosition) <= catapultRadius) { // Check if within drag radius
-                isDragging = true;
-                initialTouchPosition = new Vector2(touchPos);
-                selectedBirdBody = redBirdBody; // Assume red bird for now; can be dynamic
-                selectedBird = redBird;
-                return;
-            }
+        if (touchPos.dst(catapultPosition) <= catapultRadius) {
+            Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Hand); // Set hand cursor
+        } else {
+            Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Arrow); // Reset to default cursor
         }
-
-        // If dragging, update the drag position and limit to the catapult radius
-        if (isDragging) {
-            dragPosition = new Vector2(touchPos);
-            Vector2 direction = dragPosition.sub(catapultPosition);
-            if (direction.len() > catapultRadius) {
-                direction.nor().scl(catapultRadius); // Limit dragging to within the catapult radius
-                dragPosition.set(catapultPosition).add(direction);
+        if (Gdx.input.isTouched()) {
+            // Start dragging if inside the catapult area and no bird is currently being dragged
+            if (!isDragging) {
+                if (touchPos.dst(catapultPosition) <= catapultRadius) { // Check if within drag radius
+                    isDragging = true;
+                    initialTouchPosition = new Vector2(touchPos);
+                    selectedBirdBody = redBirdBody; // Assume red bird for now; can be dynamic
+                    selectedBird = redBird;
+                    return;
+                }
             }
 
-            // Set the bird's position to the drag position
-            selectedBird.setPosition(
-                dragPosition.x - selectedBird.getWidth() / 2,
-                dragPosition.y - selectedBird.getHeight() / 2
-            );
+            // If dragging, update the drag position and limit to the catapult radius
+            if (isDragging) {
+                dragPosition = new Vector2(touchPos);
+                Vector2 direction = dragPosition.sub(catapultPosition);
+                if (direction.len() > catapultRadius) {
+                    direction.nor().scl(catapultRadius); // Limit dragging to within the catapult radius
+                    dragPosition.set(catapultPosition).add(direction);
+                }
+
+                // Set the bird's position to the drag position
+                selectedBird.setPosition(
+                    dragPosition.x - selectedBird.getWidth() / 2,
+                    dragPosition.y - selectedBird.getHeight() / 2
+                );
+            }
+        } else if (isDragging) {
+            // On release, calculate the launch velocity and apply it to the selected bird
+            Vector2 releaseVelocity = catapultPosition.sub(dragPosition).scl(5); // Adjust scale for desired speed
+            selectedBirdBody.setLinearVelocity(-releaseVelocity.x * 0.5f / PPM, releaseVelocity.y * 2 / PPM);
+            selectedBirdBody.setGravityScale(1f); // Ensure bird falls under gravity
+
+            // Reset dragging state
+            isDragging = false;
+            selectedBird = null;
+            selectedBirdBody = null;
         }
-    } else if (isDragging) {
-        // On release, calculate the launch velocity and apply it to the selected bird
-        Vector2 releaseVelocity = catapultPosition.sub(dragPosition).scl(5); // Adjust scale for desired speed
-        selectedBirdBody.setLinearVelocity(-releaseVelocity.x*1.4f / PPM, releaseVelocity.y*2 / PPM);
-        selectedBirdBody.setGravityScale(1f); // Ensure bird falls under gravity
-
-        // Reset dragging state
-        isDragging = false;
-        selectedBird = null;
-        selectedBirdBody = null;
     }
-}
-
 
     private boolean isTouchedInsideImage(Image image, Vector2 touchPos) {
         return touchPos.x >= image.getX() &&
@@ -216,8 +217,7 @@ private void handleInput() {
                touchPos.y >= image.getY() &&
                touchPos.y <= image.getY() + image.getHeight();
     }
-    
-    
+
     private void createGround() {
         BodyDef groundDef = new BodyDef();
         groundDef.type = BodyDef.BodyType.StaticBody;
@@ -230,7 +230,7 @@ private void handleInput() {
 
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = groundShape;
-        fixtureDef.friction = 0.5f;
+        fixtureDef.friction = FRICTION;
 
         groundBody.createFixture(fixtureDef);
         groundShape.dispose();
@@ -294,20 +294,12 @@ private void handleInput() {
         );
     }
 
-    // private void updateImagePosition(Image image, Body body) {
-    //     Vector2 position = body.getPosition();
-    //     image.setPosition(
-    //         position.x * PPM - image.getWidth() / 2,
-    //         position.y * PPM - image.getHeight() / 2
-    //     );
-    // }
-    
     @Override
     public void render(float delta) {
         handleInput(); // Call input handler
-    
+
         world.step(TIME_STEP, VELOCITY_ITERATIONS, POSITION_ITERATIONS);
-    
+
         // Update positions of dynamic bodies
         updateImagePosition(pig, pigBody);
         updateImagePosition(woodVertical1, woodVertical1Body);
@@ -316,14 +308,13 @@ private void handleInput() {
         updateImagePosition(redBird, redBirdBody);
         updateImagePosition(chuckBird, chuckBirdBody);
         updateImagePosition(bombBird, bombBirdBody);
-    
+
         stage.act(Gdx.graphics.getDeltaTime());
         batch.begin();
         batch.draw(bgImage, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         batch.end();
         stage.draw();
     }
-    
 
     @Override
     public void resize(int width, int height) {
