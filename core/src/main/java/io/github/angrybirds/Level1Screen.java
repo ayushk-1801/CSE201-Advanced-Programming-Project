@@ -1,18 +1,14 @@
 package io.github.angrybirds;
 
+//birdBody.setTransform(dragPosition, birdBody.getAngle());
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Cursor;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.BodyDef;
-import com.badlogic.gdx.physics.box2d.CircleShape;
-import com.badlogic.gdx.physics.box2d.FixtureDef;
-import com.badlogic.gdx.physics.box2d.PolygonShape;
-import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
@@ -174,6 +170,7 @@ public class Level1Screen implements Screen {
         } else {
             Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Arrow); // Reset to default cursor
         }
+
         if (Gdx.input.isTouched()) {
             // Start dragging if inside the catapult area and no bird is currently being dragged
             if (!isDragging) {
@@ -189,11 +186,12 @@ public class Level1Screen implements Screen {
             // If dragging, update the drag position and limit to the catapult radius
             if (isDragging) {
                 dragPosition = new Vector2(touchPos);
-                Vector2 direction = dragPosition.sub(catapultPosition);
+                Vector2 direction = dragPosition.cpy().sub(catapultPosition);
                 if (direction.len() > catapultRadius) {
                     direction.nor().scl(catapultRadius); // Limit dragging to within the catapult radius
                     dragPosition.set(catapultPosition).add(direction);
                 }
+                selectedBirdBody.setTransform(dragPosition.x / PPM, dragPosition.y / PPM, 0);
 
                 // Set the bird's position to the drag position
                 selectedBird.setPosition(
@@ -203,8 +201,8 @@ public class Level1Screen implements Screen {
             }
         } else if (isDragging) {
             // On release, calculate the launch velocity and apply it to the selected bird
-            Vector2 releaseVelocity = catapultPosition.sub(dragPosition).scl(5); // Adjust scale for desired speed
-            selectedBirdBody.setLinearVelocity(-releaseVelocity.x * 0.5f / PPM, releaseVelocity.y * 2 / PPM);
+            Vector2 releaseVelocity = catapultPosition.cpy().sub(dragPosition).scl(5); // Adjust scale for desired speed
+            selectedBirdBody.setLinearVelocity(-releaseVelocity.x * 0.3f / PPM, releaseVelocity.y * 2 / PPM);
             selectedBirdBody.setGravityScale(1f); // Ensure bird falls under gravity
 
             // Reset dragging state
@@ -216,9 +214,9 @@ public class Level1Screen implements Screen {
 
     private boolean isTouchedInsideImage(Image image, Vector2 touchPos) {
         return touchPos.x >= image.getX() &&
-               touchPos.x <= image.getX() + image.getWidth() &&
-               touchPos.y >= image.getY() &&
-               touchPos.y <= image.getY() + image.getHeight();
+            touchPos.x <= image.getX() + image.getWidth() &&
+            touchPos.y >= image.getY() &&
+            touchPos.y <= image.getY() + image.getHeight();
     }
 
     private void createGround() {
@@ -325,13 +323,16 @@ public class Level1Screen implements Screen {
     }
 
     @Override
-    public void pause() {}
+    public void pause() {
+    }
 
     @Override
-    public void resume() {}
+    public void resume() {
+    }
 
     @Override
-    public void hide() {}
+    public void hide() {
+    }
 
     @Override
     public void dispose() {
