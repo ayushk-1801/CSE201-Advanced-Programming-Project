@@ -58,6 +58,9 @@ public  class Level1Screen implements Screen , ContactListener {
     private Image currentBird;
     private Body currentBirdBody;
 
+    private int score;
+    private int pigCount;
+
     private final float FRICTION = 500f;
     private final float DENSITY = 1f;
     private final float RESTITUTION = 0.2f;
@@ -66,7 +69,9 @@ public  class Level1Screen implements Screen , ContactListener {
     public void show() {
         // Initialize Box2D world with gravity
         world = new World(new Vector2(0, -9.81f), true);
-       // Registers the Level1 class as the contact listener
+        score = 0;
+        pigCount = 1;
+        // Registers the Level1 class as the contact listener
 
         // Create ground
         createGround();
@@ -343,21 +348,31 @@ public  class Level1Screen implements Screen , ContactListener {
             stage.getActors().removeValue(currentBird, true);
             setNextBird();
         }
+
+        // Check for defeat condition
+        if (birdQueue.isEmpty() && pigCount > 0) {
+            ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new DefeatMenu());
+        }
     }
     // Inside your collision detection method
-@Override
-public void beginContact(Contact contact) {
-    Fixture fixtureA = contact.getFixtureA();
-    Fixture fixtureB = contact.getFixtureB();
+    @Override
+    public void beginContact(Contact contact) {
+        Fixture fixtureA = contact.getFixtureA();
+        Fixture fixtureB = contact.getFixtureB();
 
-    // Check if the collision is between the bird and the block
-    if ((fixtureA.getBody() == selectedBirdBody && fixtureB.getBody() == woodVertical1Body) ||
-        (fixtureA.getBody() == woodVertical1Body&& fixtureB.getBody() == selectedBirdBody)) {
+        // Check if the collision is between the bird and the pig
+        if ((fixtureA.getBody() == currentBirdBody && fixtureB.getBody() == pigBody) ||
+            (fixtureA.getBody() == pigBody && fixtureB.getBody() == currentBirdBody)) {
+            score += 100; // Update score
+            pigCount--; // Decrease pig count
+            stage.getActors().removeValue(pig, true); // Remove pig from stage
 
-        // Apply angular force to the block body
-        woodVertical1Body.applyTorque(10f, true); // Apply torque for rotation
+            // Check for victory condition
+            if (pigCount == 0) {
+                ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new VictoryMenu1());
+            }
+        }
     }
-}
 
 
     @Override
