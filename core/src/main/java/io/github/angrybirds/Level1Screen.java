@@ -16,6 +16,9 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
+import java.util.LinkedList;
+import java.util.Queue;
+
 public  class Level1Screen implements Screen , ContactListener {
     private SpriteBatch batch;
     private Texture bgImage;
@@ -50,6 +53,10 @@ public  class Level1Screen implements Screen , ContactListener {
     private Body selectedBirdBody;
     private Image selectedBird;
     private float launchTime=-1;
+
+    private Queue<Image> birdQueue;
+    private Image currentBird;
+    private Body currentBirdBody;
 
     private final float FRICTION = 500f;
     private final float DENSITY = 1f;
@@ -148,6 +155,13 @@ public  class Level1Screen implements Screen , ContactListener {
             }
         });
 
+        birdQueue = new LinkedList<>();
+        birdQueue.add(redBird);
+        birdQueue.add(chuckBird);
+        birdQueue.add(bombBird);
+
+        setNextBird();
+
         // Add actors to the stage
         stage.addActor(slingshot);
         stage.addActor(woodVertical1);
@@ -156,9 +170,16 @@ public  class Level1Screen implements Screen , ContactListener {
         stage.addActor(pig);
         stage.addActor(pause);
         stage.addActor(skip);
-        stage.addActor(redBird);
-        //stage.addActor(chuckBird);
-        //stage.addActor(bombBird);
+        stage.addActor(currentBird);
+    }
+
+    private void setNextBird() {
+        if (!birdQueue.isEmpty()) {
+            currentBird = birdQueue.poll();
+            currentBird.setPosition(catapultPosition.x - currentBird.getWidth() / 2, catapultPosition.y - currentBird.getHeight() / 2);
+            currentBirdBody = createCircularBody(currentBird, DENSITY, FRICTION, RESTITUTION);
+            stage.addActor(currentBird);
+        }
     }
 
     private Vector2 catapultPosition = new Vector2(300, 150); // Adjust to match your slingshot position
@@ -180,8 +201,6 @@ public  class Level1Screen implements Screen , ContactListener {
                 if (touchPos.dst(catapultPosition) <= catapultRadius) { // Check if within drag radius
                     isDragging = true;
                     initialTouchPosition = new Vector2(touchPos);
-                    selectedBirdBody = redBirdBody; // Assume red bird for now; can be dynamic
-                    selectedBird = redBird;
                     return;
                 }
             }
@@ -194,31 +213,28 @@ public  class Level1Screen implements Screen , ContactListener {
                     direction.nor().scl(catapultRadius); // Limit dragging to within the catapult radius
                     dragPosition.set(catapultPosition).add(direction);
                 }
-                selectedBirdBody.setTransform(dragPosition.x / PPM, dragPosition.y / PPM, 0);
+                currentBirdBody.setTransform(dragPosition.x / PPM, dragPosition.y / PPM, 0);
 
                 // Set the bird's position to the drag position
-                selectedBird.setPosition(
-                    dragPosition.x - selectedBird.getWidth() / 2,
-                    dragPosition.y - selectedBird.getHeight() / 2
+                currentBird.setPosition(
+                    dragPosition.x - currentBird.getWidth() / 2,
+                    dragPosition.y - currentBird.getHeight() / 2
                 );
             }
         } else if (isDragging) {
             // Update bird's position to release point
-            selectedBirdBody.setTransform(dragPosition.x / PPM, dragPosition.y / PPM, 0);
-        
+            currentBirdBody.setTransform(dragPosition.x / PPM, dragPosition.y / PPM, 0);
+
             // Calculate launch velocity
             Vector2 releaseVelocity = catapultPosition.cpy().sub(dragPosition).scl(5 / PPM);
-            selectedBirdBody.setLinearVelocity(releaseVelocity.x+5, releaseVelocity.y+10); // Adjust scaling for desired trajectory
-        
+            currentBirdBody.setLinearVelocity(releaseVelocity.x + 5, releaseVelocity.y + 10); // Adjust scaling for desired trajectory
+
             // Ensure bird is affected by gravity
-            selectedBirdBody.setGravityScale(1f);
+            currentBirdBody.setGravityScale(1f);
             launchTime = TimeUtils.nanoTime();
             // Reset dragging state
             isDragging = false;
-            // selectedBird = null;
-            // selectedBirdBody = null;
         }
-        
     }
 
     private boolean isTouchedInsideImage(Image image, Vector2 touchPos) {
@@ -309,30 +325,23 @@ public  class Level1Screen implements Screen , ContactListener {
         handleInput(); // Call input handler
 
         world.step(TIME_STEP, VELOCITY_ITERATIONS, POSITION_ITERATIONS);
-      
-       
+
+        // Update positions of dynamic bodies
         updateImagePosition(pig, pigBody);
         updateImagePosition(woodVertical1, woodVertical1Body);
         updateImagePosition(woodVertical2, woodVertical2Body);
         updateImagePosition(woodHorizontal, woodHorizontalBody);
-        updateImagePosition(redBird, redBirdBody);
-        updateImagePosition(chuckBird, chuckBirdBody);
-        updateImagePosition(bombBird, bombBirdBody);
+        updateImagePosition(currentBird, currentBirdBody);
 
         stage.act(Gdx.graphics.getDeltaTime());
         batch.begin();
         batch.draw(bgImage, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         batch.end();
         stage.draw();
-        if (launchTime != -1 && TimeUtils.nanoTime() - launchTime > 10 * 1000000000L) {
-            selectedBirdBody.setLinearVelocity(0, 0);  // Stop the bird's movement
-        selectedBirdBody.setAngularVelocity(0);    // Stop any rotation
-        selectedBirdBody.setActive(false);         // Deactivate the physics body so it no longer interacts with the world
-        
-        selectedBird.setVisible(false); 
-            launchTime = -1;
-            selectedBird = null;
-             selectedBirdBody = null;
+
+        if (currentBird != null && currentBird.getY() < 0) {
+            stage.getActors().removeValue(currentBird, true);
+            setNextBird();
         }
     }
     // Inside your collision detection method
