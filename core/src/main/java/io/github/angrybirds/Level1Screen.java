@@ -49,9 +49,9 @@ public class Level1Screen implements Screen {
     private Body selectedBirdBody;
     private Image selectedBird;
 
-    private float FRICTION = 5f;
-    private float DENSITY = 1f;
-    private float RESTITUTION = 0.8f;
+    private final float FRICTION = 100f;
+    private final float DENSITY = 1f;
+    private final float RESTITUTION = 0.3f;
 
     @Override
     public void show() {
@@ -200,16 +200,22 @@ public class Level1Screen implements Screen {
                 );
             }
         } else if (isDragging) {
-            // On release, calculate the launch velocity and apply it to the selected bird
-            Vector2 releaseVelocity = catapultPosition.cpy().sub(dragPosition).scl(5); // Adjust scale for desired speed
-            selectedBirdBody.setLinearVelocity(-releaseVelocity.x * 0.3f / PPM, releaseVelocity.y * 2 / PPM);
-            selectedBirdBody.setGravityScale(1f); // Ensure bird falls under gravity
-
+            // Update bird's position to release point
+            selectedBirdBody.setTransform(dragPosition.x / PPM, dragPosition.y / PPM, 0);
+        
+            // Calculate launch velocity
+            Vector2 releaseVelocity = catapultPosition.cpy().sub(dragPosition).scl(5 / PPM);
+            selectedBirdBody.setLinearVelocity(releaseVelocity.x+5, releaseVelocity.y+10); // Adjust scaling for desired trajectory
+        
+            // Ensure bird is affected by gravity
+            selectedBirdBody.setGravityScale(1f);
+        
             // Reset dragging state
             isDragging = false;
             selectedBird = null;
             selectedBirdBody = null;
         }
+        
     }
 
     private boolean isTouchedInsideImage(Image image, Vector2 touchPos) {
