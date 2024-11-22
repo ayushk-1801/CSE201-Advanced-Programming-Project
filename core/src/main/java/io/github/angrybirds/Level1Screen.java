@@ -13,9 +13,10 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
-public class Level1Screen implements Screen {
+public  class Level1Screen implements Screen , ContactListener {
     private SpriteBatch batch;
     private Texture bgImage;
     private Stage stage;
@@ -48,15 +49,17 @@ public class Level1Screen implements Screen {
     private Vector2 dragPosition;
     private Body selectedBirdBody;
     private Image selectedBird;
+    private float launchTime=-1;
 
-    private final float FRICTION = 100f;
+    private final float FRICTION = 500f;
     private final float DENSITY = 1f;
-    private final float RESTITUTION = 0.3f;
+    private final float RESTITUTION = 0.2f;
 
     @Override
     public void show() {
         // Initialize Box2D world with gravity
         world = new World(new Vector2(0, -9.81f), true);
+       // Registers the Level1 class as the contact listener
 
         // Create ground
         createGround();
@@ -209,11 +212,11 @@ public class Level1Screen implements Screen {
         
             // Ensure bird is affected by gravity
             selectedBirdBody.setGravityScale(1f);
-        
+            launchTime = TimeUtils.nanoTime();
             // Reset dragging state
             isDragging = false;
-            selectedBird = null;
-            selectedBirdBody = null;
+            // selectedBird = null;
+            // selectedBirdBody = null;
         }
         
     }
@@ -258,9 +261,9 @@ public class Level1Screen implements Screen {
 
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = circle;
-        fixtureDef.density = density;
-        fixtureDef.friction = friction;
-        fixtureDef.restitution = restitution;
+        fixtureDef.density = DENSITY;
+        fixtureDef.friction = FRICTION;
+        fixtureDef.restitution = RESTITUTION;
 
         body.createFixture(fixtureDef);
         circle.dispose();
@@ -270,7 +273,7 @@ public class Level1Screen implements Screen {
 
     private Body createRectangularBody(Image image, boolean isStatic, float density, float friction, float restitution) {
         BodyDef bodyDef = new BodyDef();
-        bodyDef.type = isStatic ? BodyDef.BodyType.StaticBody : BodyDef.BodyType.DynamicBody;
+        bodyDef.type = BodyDef.BodyType.DynamicBody;
         bodyDef.position.set(
             (image.getX() + image.getWidth() / 2) / PPM,
             (image.getY() + image.getHeight() / 2) / PPM
@@ -284,8 +287,8 @@ public class Level1Screen implements Screen {
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = rectangle;
         fixtureDef.density = density;
-        fixtureDef.friction = friction;
-        fixtureDef.restitution = restitution;
+        fixtureDef.friction = FRICTION;
+        fixtureDef.restitution = RESTITUTION;
 
         body.createFixture(fixtureDef);
         rectangle.dispose();
@@ -306,8 +309,8 @@ public class Level1Screen implements Screen {
         handleInput(); // Call input handler
 
         world.step(TIME_STEP, VELOCITY_ITERATIONS, POSITION_ITERATIONS);
-
-        // Update positions of dynamic bodies
+      
+       
         updateImagePosition(pig, pigBody);
         updateImagePosition(woodVertical1, woodVertical1Body);
         updateImagePosition(woodVertical2, woodVertical2Body);
@@ -321,7 +324,32 @@ public class Level1Screen implements Screen {
         batch.draw(bgImage, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         batch.end();
         stage.draw();
+        if (launchTime != -1 && TimeUtils.nanoTime() - launchTime > 10 * 1000000000L) {
+            selectedBirdBody.setLinearVelocity(0, 0);  // Stop the bird's movement
+        selectedBirdBody.setAngularVelocity(0);    // Stop any rotation
+        selectedBirdBody.setActive(false);         // Deactivate the physics body so it no longer interacts with the world
+        
+        selectedBird.setVisible(false); 
+            launchTime = -1;
+            selectedBird = null;
+             selectedBirdBody = null;
+        }
     }
+    // Inside your collision detection method
+@Override
+public void beginContact(Contact contact) {
+    Fixture fixtureA = contact.getFixtureA();
+    Fixture fixtureB = contact.getFixtureB();
+
+    // Check if the collision is between the bird and the block
+    if ((fixtureA.getBody() == selectedBirdBody && fixtureB.getBody() == woodVertical1Body) ||
+        (fixtureA.getBody() == woodVertical1Body&& fixtureB.getBody() == selectedBirdBody)) {
+
+        // Apply angular force to the block body
+        woodVertical1Body.applyTorque(10f, true); // Apply torque for rotation
+    }
+}
+
 
     @Override
     public void resize(int width, int height) {
@@ -346,5 +374,20 @@ public class Level1Screen implements Screen {
         bgImage.dispose();
         world.dispose();
         stage.dispose();
+    }
+
+    @Override
+    public void endContact(Contact contact) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void preSolve(Contact contact, Manifold oldManifold) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void postSolve(Contact contact, ContactImpulse impulse) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }
