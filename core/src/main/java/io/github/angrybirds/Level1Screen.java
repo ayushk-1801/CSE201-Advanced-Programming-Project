@@ -1,5 +1,6 @@
 package io.github.angrybirds;
-
+import java.util.Timer;
+import java.util.TimerTask;
 //birdBody.setTransform(dragPosition, birdBody.getAngle());
 
 import com.badlogic.gdx.Gdx;
@@ -60,7 +61,8 @@ public  class Level1Screen implements Screen , ContactListener {
 
     private int score;
     private int pigCount;
-
+    private boolean contactDetected;
+    private long timeOfContact = -1;
     private final float FRICTION = 500f;
     private final float DENSITY = 1f;
     private final float RESTITUTION = 0.2f;
@@ -358,13 +360,41 @@ public  class Level1Screen implements Screen , ContactListener {
             stage.getActors().removeValue(currentBird, true);
             setNextBird();
         }
-
+        checkContact();
         // Check for defeat condition
         if (birdQueue.isEmpty() && pigCount > 0) {
             ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new DefeatMenu());
         }
     }
-    // Inside your collision detection method
+    public void checkContact() {
+        // Calculate distance between bird and pig
+        if (Math.sqrt(Math.pow(currentBirdBody.getPosition().x - pigBody.getPosition().x, 2) + 
+            Math.pow(currentBirdBody.getPosition().y - pigBody.getPosition().y, 2)) < 0.8f) {
+
+            // Only handle the first contact
+            if (!contactDetected) {
+                contactDetected = true;  // Set flag to true to prevent re-execution
+                score += 100;
+                pigCount--; // Decrease pig count
+                pigBody.setLinearVelocity(0, 0);  // Stop the pig's movement
+                pigBody.setAngularVelocity(0);    // Stop any rotation
+                pigBody.setActive(false);         // Deactivate the physics body
+                pig.setVisible(false);  // Remove pig from stage
+
+                // Store the time of the first contact
+                timeOfContact = TimeUtils.nanoTime();
+            }
+        }
+
+        // Check if the number of pigs is zero and 1 second has passed
+        if (pigCount == 0 && contactDetected) {
+            // If 1 second has passed since contact, switch to VictoryMenu1
+            if (TimeUtils.nanoTime() - timeOfContact > 1_000_000_000L) { // 1 second in nanoseconds
+                ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new VictoryMenu1());
+                contactDetected = false;  // Reset the flag to allow new contact detection
+            }
+        }
+    }    // Inside your collision detection method
     @Override
     public void beginContact(Contact contact) {
         Fixture fixtureA = contact.getFixtureA();
