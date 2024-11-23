@@ -1,13 +1,11 @@
 package io.github.angrybirds;
-import java.util.Timer;
-import java.util.TimerTask;
-//birdBody.setTransform(dragPosition, birdBody.getAngle());
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Cursor;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
@@ -20,7 +18,7 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import java.util.LinkedList;
 import java.util.Queue;
 
-public  class Level1Screen implements Screen , ContactListener {
+public class Level1Screen implements Screen, ContactListener {
     private SpriteBatch batch;
     private Texture bgImage;
     private Stage stage;
@@ -53,7 +51,7 @@ public  class Level1Screen implements Screen , ContactListener {
     private Vector2 dragPosition;
     private Body selectedBirdBody;
     private Image selectedBird;
-    private float launchTime=-1;
+    private float launchTime = -1;
 
     private Queue<Image> birdQueue;
     private Image currentBird;
@@ -63,17 +61,23 @@ public  class Level1Screen implements Screen , ContactListener {
     private int pigCount;
     private boolean contactDetected;
     private long timeOfContact = -1;
-    private final float FRICTION = 500f;
+    private final float FRICTION = 1f;
     private final float DENSITY = 1f;
-    private final float RESTITUTION = 0.2f;
+    private final float RESTITUTION = 0f;
+
+    private Box2DDebugRenderer debugRenderer;
+    private ShapeRenderer shapeRenderer;
 
     @Override
     public void show() {
         // Initialize Box2D world with gravity
         world = new World(new Vector2(0, -9.81f), true);
+        debugRenderer = new Box2DDebugRenderer();
+        shapeRenderer = new ShapeRenderer();
         score = 0;
         pigCount = 1;
         // Registers the Level1 class as the contact listener
+        world.setContactListener(this);
 
         // Create ground
         createGround();
@@ -127,18 +131,19 @@ public  class Level1Screen implements Screen , ContactListener {
         // Create the birds and their physics bodies
         redBird = new Image(redBirdTexture);
         redBird.setSize(redBird.getWidth() / 5, redBird.getHeight() / 5);
-        redBird.setPosition(catapultPosition.x - redBird.getWidth() / 2, catapultPosition.y - redBird.getHeight() / 2);
-        redBirdBody = createCircularBody(redBird, DENSITY, FRICTION, RESTITUTION);
+        redBird.setPosition(catapultPosition.x, catapultPosition.y);
 
         chuckBird = new Image(chuckBirdTexture);
         chuckBird.setPosition(160, slingshot.getY());
         chuckBird.setSize(redBird.getWidth(), redBird.getHeight());
-        chuckBirdBody = createCircularBody(chuckBird, DENSITY, FRICTION, RESTITUTION);
 
         bombBird = new Image(bombBirdTexture);
         bombBird.setPosition(120, slingshot.getY());
         bombBird.setSize(redBird.getWidth(), redBird.getHeight());
-        bombBirdBody = createCircularBody(bombBird, DENSITY, FRICTION, RESTITUTION);
+
+        redBirdBody = createCircularBody(redBird, DENSITY, FRICTION, 0.8f); // Higher restitution for bounce
+        chuckBirdBody = createCircularBody(chuckBird, DENSITY, FRICTION, 0.8f);
+        bombBirdBody = createCircularBody(bombBird, DENSITY, FRICTION, 0.8f);
 
         // Create the pause button
         pause = new Image(pauseTexture);
@@ -178,6 +183,7 @@ public  class Level1Screen implements Screen , ContactListener {
         stage.addActor(pause);
         stage.addActor(skip);
         stage.addActor(currentBird);
+        stage.addActor(redBird);
     }
 
     private void setNextBird() {
@@ -208,13 +214,14 @@ public  class Level1Screen implements Screen , ContactListener {
                 if (touchPos.dst(catapultPosition) <= catapultRadius) { // Check if within drag radius
                     isDragging = true;
                     initialTouchPosition = new Vector2(touchPos);
+                    dragPosition = new Vector2(touchPos); // Initialize dragPosition
                     return;
                 }
             }
 
             // If dragging, update the drag position and limit to the catapult radius
             if (isDragging) {
-                dragPosition = new Vector2(touchPos);
+                dragPosition.set(touchPos);
                 Vector2 direction = dragPosition.cpy().sub(catapultPosition);
                 if (direction.len() > catapultRadius) {
                     direction.nor().scl(catapultRadius); // Limit dragging to within the catapult radius
@@ -223,10 +230,7 @@ public  class Level1Screen implements Screen , ContactListener {
                 currentBirdBody.setTransform(dragPosition.x / PPM, dragPosition.y / PPM, 0);
 
                 // Set the bird's position to the drag position
-                currentBird.setPosition(
-                    dragPosition.x - currentBird.getWidth() / 2,
-                    dragPosition.y - currentBird.getHeight() / 2
-                );
+                currentBird.setPosition(dragPosition.x - currentBird.getWidth() / 2, dragPosition.y - currentBird.getHeight() / 2);
             }
         } else if (isDragging) {
             // Update bird's position to release point
@@ -245,10 +249,7 @@ public  class Level1Screen implements Screen , ContactListener {
     }
 
     private boolean isTouchedInsideImage(Image image, Vector2 touchPos) {
-        return touchPos.x >= image.getX() &&
-            touchPos.x <= image.getX() + image.getWidth() &&
-            touchPos.y >= image.getY() &&
-            touchPos.y <= image.getY() + image.getHeight();
+        return touchPos.x >= image.getX() && touchPos.x <= image.getX() + image.getWidth() && touchPos.y >= image.getY() && touchPos.y <= image.getY() + image.getHeight();
     }
 
     private void createGround() {
@@ -272,10 +273,7 @@ public  class Level1Screen implements Screen , ContactListener {
     private Body createCircularBody(Image image, float density, float friction, float restitution) {
         BodyDef bodyDef = new BodyDef();
         bodyDef.type = BodyDef.BodyType.DynamicBody;
-        bodyDef.position.set(
-            (image.getX() + image.getWidth() / 2) / PPM,
-            (image.getY() + image.getHeight() / 2) / PPM
-        );
+        bodyDef.position.set((image.getX() + image.getWidth() / 2) / PPM, (image.getY() + image.getHeight() / 2) / PPM);
 
         Body body = world.createBody(bodyDef);
 
@@ -284,9 +282,9 @@ public  class Level1Screen implements Screen , ContactListener {
 
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = circle;
-        fixtureDef.density = DENSITY;
-        fixtureDef.friction = FRICTION;
-        fixtureDef.restitution = RESTITUTION;
+        fixtureDef.density = density;
+        fixtureDef.friction = friction;
+        fixtureDef.restitution = restitution; // Set restitution for bounciness
 
         body.createFixture(fixtureDef);
         circle.dispose();
@@ -297,10 +295,7 @@ public  class Level1Screen implements Screen , ContactListener {
     private Body createRectangularBody(Image image, boolean isStatic, float density, float friction, float restitution) {
         BodyDef bodyDef = new BodyDef();
         bodyDef.type = BodyDef.BodyType.DynamicBody;
-        bodyDef.position.set(
-            (image.getX() + image.getWidth() / 2) / PPM,
-            (image.getY() + image.getHeight() / 2) / PPM
-        );
+        bodyDef.position.set((image.getX() + image.getWidth() / 2) / PPM, (image.getY() + image.getHeight() / 2) / PPM);
 
         Body body = world.createBody(bodyDef);
 
@@ -321,10 +316,7 @@ public  class Level1Screen implements Screen , ContactListener {
 
     private void updateImagePosition(Image image, Body body) {
         Vector2 position = body.getPosition();
-        image.setPosition(
-            position.x * PPM - image.getWidth() / 2,
-            position.y * PPM - image.getHeight() / 2
-        );
+        image.setPosition(position.x * PPM - image.getWidth() / 2, position.y * PPM - image.getHeight() / 2);
     }
 
     @Override
@@ -345,14 +337,17 @@ public  class Level1Screen implements Screen , ContactListener {
         batch.draw(bgImage, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         batch.end();
         stage.draw();
+
+        if (isDragging) {
+            drawTrajectory();
+        }
+
         if (launchTime != -1 && TimeUtils.nanoTime() - launchTime > 10 * 1000000000L) {
             currentBirdBody.setLinearVelocity(0, 0);  // Stop the bird's movement
             currentBirdBody.setAngularVelocity(0);    // Stop any rotation
             currentBirdBody.setActive(false);         // Deactivate the physics body so it no longer interacts with the world
             currentBird.setVisible(false);
             launchTime = -1;
-            // currentBird = null;
-            // currentBirdBody = null;
             setNextBird();
         }
 
@@ -365,11 +360,35 @@ public  class Level1Screen implements Screen , ContactListener {
         if (birdQueue.isEmpty() && pigCount > 0) {
             ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new DefeatMenu());
         }
+
+        // Render debug information
+        debugRenderer.render(world, stage.getCamera().combined);
     }
+
+    private void drawTrajectory() {
+        shapeRenderer.setProjectionMatrix(stage.getCamera().combined);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(1, 0, 0, 1); // White color
+
+        Vector2 start = new Vector2(currentBirdBody.getPosition().x, currentBirdBody.getPosition().y);
+        Vector2 velocity = catapultPosition.cpy().sub(dragPosition).scl(5 / PPM);
+
+        float timeStep = 1 / 60f;
+        int numSteps = 100; // Number of steps to simulate
+
+        for (int i = 0; i < numSteps; i++) {
+            float t = i * timeStep;
+            Vector2 position = new Vector2(start.x + velocity.x * t * 10, start.y + velocity.y * t + -1f * 2 * t * t);
+            shapeRenderer.circle(position.x * PPM, position.y * PPM, 2); // Draw small circles to form a dotted line
+        }
+
+        shapeRenderer.end();
+    }
+
+
     public void checkContact() {
         // Calculate distance between bird and pig
-        if (Math.sqrt(Math.pow(currentBirdBody.getPosition().x - pigBody.getPosition().x, 2) +
-            Math.pow(currentBirdBody.getPosition().y - pigBody.getPosition().y, 2)) < 0.8f) {
+        if (Math.sqrt(Math.pow(currentBirdBody.getPosition().x - pigBody.getPosition().x, 2) + Math.pow(currentBirdBody.getPosition().y - pigBody.getPosition().y, 2)) < 0.8f) {
 
             // Only handle the first contact
             if (!contactDetected) {
@@ -394,15 +413,15 @@ public  class Level1Screen implements Screen , ContactListener {
                 contactDetected = false;  // Reset the flag to allow new contact detection
             }
         }
-    }    // Inside your collision detection method
+    }
+
     @Override
     public void beginContact(Contact contact) {
         Fixture fixtureA = contact.getFixtureA();
         Fixture fixtureB = contact.getFixtureB();
 
         // Check if the collision is between the bird and the pig
-        if ((fixtureA.getBody() == currentBirdBody && fixtureB.getBody() == pigBody) ||
-            (fixtureA.getBody() == pigBody && fixtureB.getBody() == currentBirdBody)) {
+        if ((fixtureA.getBody() == currentBirdBody && fixtureB.getBody() == pigBody) || (fixtureA.getBody() == pigBody && fixtureB.getBody() == currentBirdBody)) {
             score += 100; // Update score
             pigCount--; // Decrease pig count
             stage.getActors().removeValue(pig, true); // Remove pig from stage
@@ -416,42 +435,48 @@ public  class Level1Screen implements Screen , ContactListener {
 
 
     @Override
-    public void resize(int width, int height) {
-        stage.getViewport().update(width, height, true);
+    public void resize(int i, int i1) {
+
     }
 
     @Override
     public void pause() {
+
     }
 
     @Override
     public void resume() {
+
     }
 
     @Override
     public void hide() {
+
     }
 
     @Override
     public void dispose() {
         batch.dispose();
         bgImage.dispose();
-        world.dispose();
         stage.dispose();
+        world.dispose();
+        debugRenderer.dispose();
+        shapeRenderer.dispose();
     }
 
     @Override
     public void endContact(Contact contact) {
-        throw new UnsupportedOperationException("Not supported yet.");
+
     }
 
     @Override
-    public void preSolve(Contact contact, Manifold oldManifold) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public void preSolve(Contact contact, Manifold manifold) {
+
     }
 
     @Override
-    public void postSolve(Contact contact, ContactImpulse impulse) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public void postSolve(Contact contact, ContactImpulse contactImpulse) {
+
     }
+
 }
