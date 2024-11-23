@@ -343,6 +343,16 @@ public  class Level1Screen implements Screen , ContactListener {
         batch.draw(bgImage, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         batch.end();
         stage.draw();
+        if (launchTime != -1 && TimeUtils.nanoTime() - launchTime > 10 * 1000000000L) {
+            currentBirdBody.setLinearVelocity(0, 0);  // Stop the bird's movement
+            currentBirdBody.setAngularVelocity(0);    // Stop any rotation
+            currentBirdBody.setActive(false);         // Deactivate the physics body so it no longer interacts with the world
+            currentBird.setVisible(false); 
+            launchTime = -1;
+            // currentBird = null;
+            // currentBirdBody = null;
+            setNextBird();
+        }
 
         if (currentBird != null && currentBird.getY() < 0) {
             stage.getActors().removeValue(currentBird, true);
