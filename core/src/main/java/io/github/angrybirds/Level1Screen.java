@@ -349,7 +349,7 @@ public  class Level1Screen implements Screen , ContactListener {
             currentBirdBody.setLinearVelocity(0, 0);  // Stop the bird's movement
             currentBirdBody.setAngularVelocity(0);    // Stop any rotation
             currentBirdBody.setActive(false);         // Deactivate the physics body so it no longer interacts with the world
-            currentBird.setVisible(false); 
+            currentBird.setVisible(false);
             launchTime = -1;
             // currentBird = null;
             // currentBirdBody = null;
@@ -368,7 +368,7 @@ public  class Level1Screen implements Screen , ContactListener {
     }
     public void checkContact() {
         // Calculate distance between bird and pig
-        if (Math.sqrt(Math.pow(currentBirdBody.getPosition().x - pigBody.getPosition().x, 2) + 
+        if (Math.sqrt(Math.pow(currentBirdBody.getPosition().x - pigBody.getPosition().x, 2) +
             Math.pow(currentBirdBody.getPosition().y - pigBody.getPosition().y, 2)) < 0.8f) {
 
             // Only handle the first contact

@@ -15,7 +15,7 @@ public class VictoryMenu1 implements Screen {
     private Image resumeButton;
     private Image menuButton;
     private Image restartButton;
-    private Image vicotryImage;
+    private Image victoryImage;
 
     @Override
     public void show() {
@@ -27,32 +27,36 @@ public class VictoryMenu1 implements Screen {
         Texture resumeTexture = new Texture("buttons/resume.png");
         Texture menuTexture = new Texture("buttons/menu.png");
         Texture restartTexture = new Texture("buttons/restart.png");
-        Texture victoryTexture = new Texture("ui/victory_tag.png");
+        Texture defeatTexture = new Texture("ui/victory.png");
 
-        // Create buttons
+        // Create buttons and images
         bg = new Image(bgTexture);
         resumeButton = new Image(resumeTexture);
         menuButton = new Image(menuTexture);
         restartButton = new Image(restartTexture);
-        vicotryImage = new Image(victoryTexture);
+        victoryImage = new Image(defeatTexture);
 
-        // Add listeners to buttons
+        // Set positions and sizes
         bg.setSize(Gdx.graphics.getWidth() / 4, Gdx.graphics.getHeight());
-        bg.setPosition(Gdx.graphics.getWidth()/2 - bg.getWidth()/2, 0);
+        bg.setPosition(Gdx.graphics.getWidth() / 2 - bg.getWidth() / 2, 0);
 
         resumeButton.setPosition(Gdx.graphics.getWidth() / 2 - resumeButton.getWidth() / 2 - 165, Gdx.graphics.getHeight() / 2f - 300);
         resumeButton.setSize(150, 150);
         resumeButton.setScaling(com.badlogic.gdx.utils.Scaling.fit);
+
         menuButton.setPosition(Gdx.graphics.getWidth() / 2 - menuButton.getWidth() / 2 - 15, Gdx.graphics.getHeight() / 2f - 300);
         menuButton.setSize(150, 150);
         menuButton.setScaling(com.badlogic.gdx.utils.Scaling.fit);
+
         restartButton.setPosition(Gdx.graphics.getWidth() / 2 - restartButton.getWidth() / 2 + 135, Gdx.graphics.getHeight() / 2f - 300);
         restartButton.setSize(150, 150);
         restartButton.setScaling(com.badlogic.gdx.utils.Scaling.fit);
-        vicotryImage.setSize(1500, 1000);
-        vicotryImage.setPosition(Gdx.graphics.getWidth() / 2 - vicotryImage.getWidth() / 2, Gdx.graphics.getHeight() - vicotryImage.getHeight() - 80);
-        vicotryImage.setScaling(com.badlogic.gdx.utils.Scaling.fit);
 
+        victoryImage.setSize(600, 500);
+        victoryImage.setPosition(Gdx.graphics.getWidth() / 2 - victoryImage.getWidth() / 2, Gdx.graphics.getHeight() - victoryImage.getHeight() - 20);
+        victoryImage.setScaling(com.badlogic.gdx.utils.Scaling.fit);
+
+        // Add listeners to buttons
         resumeButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -63,7 +67,6 @@ public class VictoryMenu1 implements Screen {
         menuButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                System.out.println("Menu button clicked");
                 ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new LevelSelectScreen());
             }
         });
@@ -80,6 +83,7 @@ public class VictoryMenu1 implements Screen {
         stage.addActor(resumeButton);
         stage.addActor(menuButton);
         stage.addActor(restartButton);
+        stage.addActor(victoryImage);
     }
 
     @Override
