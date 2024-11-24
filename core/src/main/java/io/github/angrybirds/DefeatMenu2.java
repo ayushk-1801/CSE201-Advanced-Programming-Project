@@ -9,7 +9,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
-public class DefeatMenu implements Screen {
+public class DefeatMenu2 implements Screen {
     private Stage stage;
     private Image bg;
     private Image resumeButton;
@@ -60,7 +60,7 @@ public class DefeatMenu implements Screen {
         resumeButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new Level1Screen());
+                ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new Level2Screen());
             }
         });
 
@@ -74,7 +74,7 @@ public class DefeatMenu implements Screen {
         restartButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new Level1Screen());
+                ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new Level2Screen());
             }
         });
 
