@@ -378,7 +378,7 @@ public class Level1Screen implements Screen, ContactListener {
 
         for (int i = 0; i < numSteps; i++) {
             float t = i * timeStep;
-            Vector2 position = new Vector2(start.x + velocity.x * t * 10, start.y + velocity.y * t + -1f * 2 * t * t);
+            Vector2 position = new Vector2(start.x + ((velocity.x)+5 )* t , start.y + ((velocity.y)+10) * t + -10f  * t * t/2);
             shapeRenderer.circle(position.x * PPM, position.y * PPM, 2); // Draw small circles to form a dotted line
         }
 
