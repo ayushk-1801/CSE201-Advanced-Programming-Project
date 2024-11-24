@@ -61,9 +61,9 @@ public class Level1Screen implements Screen, ContactListener {
     private int pigCount;
     private boolean contactDetected;
     private long timeOfContact = -1;
-    private final float FRICTION = 1f;
+    private final float FRICTION = 100f;
     private final float DENSITY = 1f;
-    private final float RESTITUTION = 0f;
+    private final float RESTITUTION = 0.2f;
 
     private Box2DDebugRenderer debugRenderer;
     private ShapeRenderer shapeRenderer;
@@ -294,25 +294,32 @@ public class Level1Screen implements Screen, ContactListener {
 
     private Body createRectangularBody(Image image, boolean isStatic, float density, float friction, float restitution) {
         BodyDef bodyDef = new BodyDef();
-        bodyDef.type = BodyDef.BodyType.DynamicBody;
-        bodyDef.position.set((image.getX() + image.getWidth() / 2) / PPM, (image.getY() + image.getHeight() / 2) / PPM);
-
+        bodyDef.type = isStatic ? BodyDef.BodyType.StaticBody : BodyDef.BodyType.DynamicBody;
+        bodyDef.position.set(
+            (image.getX() + image.getWidth() / 2) / PPM,
+            (image.getY() + image.getHeight() / 2) / PPM
+        );
+    
         Body body = world.createBody(bodyDef);
-
+    
         PolygonShape rectangle = new PolygonShape();
-        rectangle.setAsBox(image.getWidth() / 2 / PPM, image.getHeight() / 2 / PPM);
-
+        rectangle.setAsBox(
+            (image.getWidth() / 2) / PPM,
+            (image.getHeight() / 2) / PPM
+        );
+    
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = rectangle;
         fixtureDef.density = density;
-        fixtureDef.friction = FRICTION;
-        fixtureDef.restitution = RESTITUTION;
-
+        fixtureDef.friction = friction;
+        fixtureDef.restitution = restitution;
+    
         body.createFixture(fixtureDef);
         rectangle.dispose();
-
+    
         return body;
     }
+    
 
     private void updateImagePosition(Image image, Body body) {
         Vector2 position = body.getPosition();
@@ -379,7 +386,7 @@ public class Level1Screen implements Screen, ContactListener {
         for (int i = 0; i < numSteps; i++) {
             float t = i * timeStep;
             Vector2 position = new Vector2(start.x + ((velocity.x)+5 )* t , start.y + ((velocity.y)+10) * t + -10f  * t * t/2);
-            shapeRenderer.circle(position.x * PPM, position.y * PPM, 2); // Draw small circles to form a dotted line
+            shapeRenderer.circle(position.x * PPM, position.y * PPM, 2);
         }
 
         shapeRenderer.end();
@@ -389,22 +396,69 @@ public class Level1Screen implements Screen, ContactListener {
     public void checkContact() {
         // Calculate distance between bird and pig
         if (Math.sqrt(Math.pow(currentBirdBody.getPosition().x - pigBody.getPosition().x, 2) + Math.pow(currentBirdBody.getPosition().y - pigBody.getPosition().y, 2)) < 0.8f) {
-
+    
             // Only handle the first contact
             if (!contactDetected) {
                 contactDetected = true;  // Set flag to true to prevent re-execution
                 score += 100;
-                pigCount--; // Decrease pig count
-                pigBody.setLinearVelocity(0, 0);  // Stop the pig's movement
-                pigBody.setAngularVelocity(0);    // Stop any rotation
-                pigBody.setActive(false);         // Deactivate the physics body
-                pig.setVisible(false);  // Remove pig from stage
-
-                // Store the time of the first contact
+                pigCount--; 
+                pigBody.setLinearVelocity(0, 0); 
+                pigBody.setAngularVelocity(0);    
+                pigBody.setActive(false);         
+                pig.setVisible(false);  
+    
+                // Reduce bird velocity
+                currentBirdBody.setLinearVelocity(
+                    currentBirdBody.getLinearVelocity().x * 0.8f,
+                    currentBirdBody.getLinearVelocity().y 
+                );
+    
                 timeOfContact = TimeUtils.nanoTime();
             }
         }
-
+        if (Math.sqrt(Math.pow(currentBirdBody.getPosition().x - woodHorizontalBody.getPosition().x, 2) + Math.pow(currentBirdBody.getPosition().y - woodHorizontalBody.getPosition().y, 2)) < 0.8f) {
+    
+            score += 100;
+            woodHorizontalBody.setLinearVelocity(0, 0);  // Stop the pig's movement
+            woodHorizontalBody.setAngularVelocity(0);    // Stop any rotation
+            woodHorizontalBody.setActive(false);         // Deactivate the physics body
+            woodHorizontal.setVisible(false);
+    
+            // Reduce bird velocity
+            currentBirdBody.setLinearVelocity(
+                currentBirdBody.getLinearVelocity().x ,
+                currentBirdBody.getLinearVelocity().y 
+            );
+        }
+        if (Math.sqrt(Math.pow(currentBirdBody.getPosition().x - woodVertical1Body.getPosition().x, 2) + Math.pow(currentBirdBody.getPosition().y - woodVertical1Body.getPosition().y, 2)) < 0.8f) {
+    
+            score += 100;
+            woodVertical1Body.setLinearVelocity(0, 0);  // Stop the pig's movement
+            woodVertical1Body.setAngularVelocity(0);    // Stop any rotation
+            woodVertical1Body.setActive(false);         // Deactivate the physics body
+            woodVertical1.setVisible(false);
+    
+            // Reduce bird velocity
+            currentBirdBody.setLinearVelocity(
+                currentBirdBody.getLinearVelocity().x * 0.8f,
+                currentBirdBody.getLinearVelocity().y 
+            );
+        }
+        if (Math.sqrt(Math.pow(currentBirdBody.getPosition().x - woodVertical2Body.getPosition().x, 2) + Math.pow(currentBirdBody.getPosition().y - woodVertical2Body.getPosition().y, 2)) < 0.8f) {
+    
+            score += 100;
+            woodVertical2Body.setLinearVelocity(0, 0);  // Stop the pig's movement
+            woodVertical2Body.setAngularVelocity(0);    // Stop any rotation
+            woodVertical2Body.setActive(false);         // Deactivate the physics body
+            woodVertical2.setVisible(false);
+    
+            // Reduce bird velocity
+            currentBirdBody.setLinearVelocity(
+                currentBirdBody.getLinearVelocity().x * 0.8f,
+                currentBirdBody.getLinearVelocity().y 
+            );
+        }
+    
         // Check if the number of pigs is zero and 1 second has passed
         if (pigCount == 0 && contactDetected) {
             // If 1 second has passed since contact, switch to VictoryMenu1
@@ -414,6 +468,7 @@ public class Level1Screen implements Screen, ContactListener {
             }
         }
     }
+    
 
     @Override
     public void beginContact(Contact contact) {
