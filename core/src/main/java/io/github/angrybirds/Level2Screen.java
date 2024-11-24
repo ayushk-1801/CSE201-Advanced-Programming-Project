@@ -34,7 +34,7 @@ public class Level2Screen implements Screen, ContactListener {
     // Physics bodies
     private Body pig1Body, pig2Body, helmetPigBody;
     private Body woodVertical1Body, woodVertical2Body, woodHorizontalBody;
-    private Body redBirdBody, chuckBirdBody, bombBirdBody;
+    private Body redBirdBody, chuckBirdBody, bombBirdBody, chuckBirdBody1, chuckBirdBody2;
     private Body groundBody;
 
     // Images for the fort, pigs, and slingshot
@@ -43,7 +43,7 @@ public class Level2Screen implements Screen, ContactListener {
     private Image slingshot;
     private Image pause;
     private Image skip;
-    private Image redBird, chuckBird, bombBird;
+    private Image redBird, chuckBird, bombBird, chuckBird1, chuckBird2;
 
     // Input management for bird launch
     private boolean isDragging;
@@ -65,6 +65,8 @@ public class Level2Screen implements Screen, ContactListener {
     private final float DENSITY = 1f;
     private final float RESTITUTION = 0.2f;
 
+    private Queue<Body> bodiesToDeactivate;
+
     private Box2DDebugRenderer debugRenderer;
     private ShapeRenderer shapeRenderer;
 
@@ -78,6 +80,9 @@ public class Level2Screen implements Screen, ContactListener {
         pigCount = 3; // Adjust pig count for Level 2
         // Registers the Level2 class as the contact listener
         world.setContactListener(this);
+
+        // Initialize the queue
+        bodiesToDeactivate = new LinkedList<>();
 
         // Create ground
         createGround();
@@ -149,13 +154,24 @@ public class Level2Screen implements Screen, ContactListener {
         chuckBird.setPosition(160, slingshot.getY());
         chuckBird.setSize(redBird.getWidth(), redBird.getHeight());
 
+        chuckBird1 = new Image(chuckBirdTexture);
+        chuckBird1.setPosition(120, slingshot.getY());
+        chuckBird1.setSize(redBird.getWidth(), redBird.getHeight());
+
+        chuckBird2 = new Image(chuckBirdTexture);
+        chuckBird2.setPosition(120, slingshot.getY());
+        chuckBird2.setSize(redBird.getWidth(), redBird.getHeight());
+
+
         bombBird = new Image(bombBirdTexture);
         bombBird.setPosition(120, slingshot.getY());
         bombBird.setSize(redBird.getWidth(), redBird.getHeight());
 
-        redBirdBody = createCircularBody(redBird, DENSITY, FRICTION, 5f); // Higher restitution for bounce
-        chuckBirdBody = createCircularBody(chuckBird, DENSITY, FRICTION, 5f);
-        bombBirdBody = createCircularBody(bombBird, DENSITY, FRICTION, 5f);
+        redBirdBody = createCircularBody(redBird, DENSITY, FRICTION, 0.8f); // Higher restitution for bounce
+        chuckBirdBody = createCircularBody(chuckBird, DENSITY, FRICTION, 0.8f);
+        bombBirdBody = createCircularBody(bombBird, DENSITY, FRICTION, 0.8f);
+        chuckBirdBody1 = createCircularBody(chuckBird1, DENSITY, FRICTION, 0.8f);
+        chuckBirdBody2 = createCircularBody(chuckBird2, DENSITY, FRICTION, 0.8f);
 
         // Create the pause button
         pause = new Image(pauseTexture);
@@ -183,6 +199,8 @@ public class Level2Screen implements Screen, ContactListener {
         birdQueue.add(redBird);
         birdQueue.add(chuckBird);
         birdQueue.add(bombBird);
+        birdQueue.add(chuckBird1);
+        birdQueue.add(chuckBird2);
 
         setNextBird();
 
@@ -402,7 +420,7 @@ public class Level2Screen implements Screen, ContactListener {
         shapeRenderer.end();
     }
 
-    public void checkContact() {
+    private void checkContact() {
         if (isContact(currentBirdBody, pig1Body)) {
             handlePigContact(pig1, pig1Body);
         }
@@ -423,10 +441,10 @@ public class Level2Screen implements Screen, ContactListener {
         }
 
         // Check if the number of pigs is zero and 1 second has passed
-        if (pigCount == 0 && contactDetected) {
-            // If 1 second has passed since contact, switch to VictoryMenu2
+        if (pigCount == 0) {
+            // If 1 second has passed since contact, switch to VictoryMenu3
             if (TimeUtils.nanoTime() - timeOfContact > 1_000_000_000L) { // 1 second in nanoseconds
-                ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new VictoryMenu2());
+                ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new VictoryMenu3());
                 contactDetected = false;  // Reset the flag to allow new contact detection
             }
         }
@@ -437,23 +455,20 @@ public class Level2Screen implements Screen, ContactListener {
     }
 
     private void handlePigContact(Image pig, Body pigBody) {
-        if (!contactDetected) {
-            contactDetected = true;  // Set flag to true to prevent re-execution
-            score += 100;
-            pigCount--;
-            pigBody.setLinearVelocity(0, 0);
-            pigBody.setAngularVelocity(0);
-            pigBody.setActive(false);
-            pig.setVisible(false);
+        score += 100;
+        pigCount--;
+        pigBody.setLinearVelocity(0, 0);
+        pigBody.setAngularVelocity(0);
+        bodiesToDeactivate.add(pigBody);  // Queue the body for deactivation
+        pig.setVisible(false);
 
-            // Reduce bird velocity
-            currentBirdBody.setLinearVelocity(
-                currentBirdBody.getLinearVelocity().x * 0.8f,
-                currentBirdBody.getLinearVelocity().y
-            );
+        // Reduce bird velocity
+        currentBirdBody.setLinearVelocity(
+            currentBirdBody.getLinearVelocity().x * 0.8f,
+            currentBirdBody.getLinearVelocity().y
+        );
 
-            timeOfContact = TimeUtils.nanoTime();
-        }
+        timeOfContact = TimeUtils.nanoTime();
     }
 
     private void handleWoodContact(Image wood, Body woodBody) {
@@ -475,14 +490,12 @@ public class Level2Screen implements Screen, ContactListener {
         Fixture fixtureA = contact.getFixtureA();
         Fixture fixtureB = contact.getFixtureB();
 
-        // Check if the collision is between the bird and a pig
+        // Check if the collision is between the bird and any pig
         if ((fixtureA.getBody() == currentBirdBody && fixtureB.getBody() == pig1Body) || (fixtureA.getBody() == pig1Body && fixtureB.getBody() == currentBirdBody)) {
             handlePigContact(pig1, pig1Body);
-        }
-        if ((fixtureA.getBody() == currentBirdBody && fixtureB.getBody() == pig2Body) || (fixtureA.getBody() == pig2Body && fixtureB.getBody() == currentBirdBody)) {
+        } else if ((fixtureA.getBody() == currentBirdBody && fixtureB.getBody() == pig2Body) || (fixtureA.getBody() == pig2Body && fixtureB.getBody() == currentBirdBody)) {
             handlePigContact(pig2, pig2Body);
-        }
-        if ((fixtureA.getBody() == currentBirdBody && fixtureB.getBody() == helmetPigBody) || (fixtureA.getBody() == helmetPigBody && fixtureB.getBody() == currentBirdBody)) {
+        } else if ((fixtureA.getBody() == currentBirdBody && fixtureB.getBody() == helmetPigBody) || (fixtureA.getBody() == helmetPigBody && fixtureB.getBody() == currentBirdBody)) {
             handlePigContact(helmetPig, helmetPigBody);
         }
     }
