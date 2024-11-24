@@ -64,7 +64,7 @@ public class Level1Screen implements Screen, ContactListener {
     private final float FRICTION = 100f;
     private final float DENSITY = 1f;
     private final float RESTITUTION = 0.2f;
-
+    private boolean launched=false;
     private Box2DDebugRenderer debugRenderer;
     private ShapeRenderer shapeRenderer;
 
@@ -219,7 +219,6 @@ public class Level1Screen implements Screen, ContactListener {
                 }
             }
 
-            // If dragging, update the drag position and limit to the catapult radius
             if (isDragging) {
                 dragPosition.set(touchPos);
                 Vector2 direction = dragPosition.cpy().sub(catapultPosition);
@@ -239,7 +238,7 @@ public class Level1Screen implements Screen, ContactListener {
             // Calculate launch velocity
             Vector2 releaseVelocity = catapultPosition.cpy().sub(dragPosition).scl(5 / PPM);
             currentBirdBody.setLinearVelocity(releaseVelocity.x + 5, releaseVelocity.y + 10); // Adjust scaling for desired trajectory
-
+            launched=true;
             // Ensure bird is affected by gravity
             currentBirdBody.setGravityScale(1f);
             launchTime = TimeUtils.nanoTime();
@@ -278,7 +277,7 @@ public class Level1Screen implements Screen, ContactListener {
         Body body = world.createBody(bodyDef);
 
         CircleShape circle = new CircleShape();
-        circle.setRadius(image.getWidth() / 2 / PPM);
+        circle.setRadius(image.getWidth() / 3/ PPM);
 
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = circle;
@@ -299,27 +298,27 @@ public class Level1Screen implements Screen, ContactListener {
             (image.getX() + image.getWidth() / 2) / PPM,
             (image.getY() + image.getHeight() / 2) / PPM
         );
-
+    
         Body body = world.createBody(bodyDef);
-
+    
         PolygonShape rectangle = new PolygonShape();
         rectangle.setAsBox(
             (image.getWidth() / 2) / PPM,
             (image.getHeight() / 2) / PPM
         );
-
+    
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = rectangle;
         fixtureDef.density = density;
         fixtureDef.friction = friction;
         fixtureDef.restitution = restitution;
-
+    
         body.createFixture(fixtureDef);
         rectangle.dispose();
-
+    
         return body;
     }
-
+    
 
     private void updateImagePosition(Image image, Body body) {
         Vector2 position = body.getPosition();
@@ -348,13 +347,14 @@ public class Level1Screen implements Screen, ContactListener {
         if (isDragging) {
             drawTrajectory();
         }
-
+        checkAbility();
         if (launchTime != -1 && TimeUtils.nanoTime() - launchTime > 10 * 1000000000L) {
             currentBirdBody.setLinearVelocity(0, 0);  // Stop the bird's movement
             currentBirdBody.setAngularVelocity(0);    // Stop any rotation
             currentBirdBody.setActive(false);         // Deactivate the physics body so it no longer interacts with the world
             currentBird.setVisible(false);
             launchTime = -1;
+            launched=false;
             setNextBird();
         }
 
@@ -365,13 +365,36 @@ public class Level1Screen implements Screen, ContactListener {
         checkContact();
         // Check for defeat condition
         if (birdQueue.isEmpty() && pigCount > 0) {
-            ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new DefeatMenu1());
+            ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new DefeatMenu());
         }
 
         // Render debug information
         debugRenderer.render(world, stage.getCamera().combined);
     }
 
+    private void checkAbility() {
+        // Check if the user clicked anywhere on the screen
+        if (Gdx.input.justTouched()) {
+            // Check if the current bird is Chuck
+            if (currentBird.equals(chuckBird)) {
+                // Ensure the bird is launched and a time delay has passed
+                if (launched && TimeUtils.nanoTime() - launchTime > 500000000L) {
+                    // Get the bird's current velocity
+                    Vector2 currentVelocity = currentBirdBody.getLinearVelocity();
+                    
+                    // Double the velocity
+                    Vector2 newVelocity = currentVelocity.scl(2f);
+                    
+                    // Apply the new velocity to the bird
+                    currentBirdBody.setLinearVelocity(newVelocity);
+                    
+                    // Optionally, prevent repeated activation
+                    launched = false; // Or use a separate flag like `abilityUsed = true;`
+                }
+            }
+        }
+    }
+    
     private void drawTrajectory() {
         shapeRenderer.setProjectionMatrix(stage.getCamera().combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
@@ -395,80 +418,82 @@ public class Level1Screen implements Screen, ContactListener {
 
     public void checkContact() {
         // Calculate distance between bird and pig
-        if (Math.sqrt(Math.pow(currentBirdBody.getPosition().x - pigBody.getPosition().x, 2) + Math.pow(currentBirdBody.getPosition().y - pigBody.getPosition().y, 2)) < 0.8f) {
-
+        if (Math.sqrt(Math.pow(currentBirdBody.getPosition().x - pigBody.getPosition().x, 2) + Math.pow(currentBirdBody.getPosition().y - pigBody.getPosition().y, 2)) < 0.8f&&currentBirdBody.getLinearVelocity().x>1f) {
+    
             // Only handle the first contact
             if (!contactDetected) {
                 contactDetected = true;  // Set flag to true to prevent re-execution
                 score += 100;
-                pigCount--;
-                pigBody.setLinearVelocity(0, 0);
-                pigBody.setAngularVelocity(0);
-                pigBody.setActive(false);
-                pig.setVisible(false);
-
+                pigCount--; 
+                pigBody.setLinearVelocity(0, 0); 
+                pigBody.setAngularVelocity(0);    
+                pigBody.setActive(false);         
+                pig.setVisible(false); 
+                pig.remove();
+                
+    
                 // Reduce bird velocity
                 currentBirdBody.setLinearVelocity(
                     currentBirdBody.getLinearVelocity().x * 0.8f,
-                    currentBirdBody.getLinearVelocity().y
+                    currentBirdBody.getLinearVelocity().y 
                 );
-
+    
                 timeOfContact = TimeUtils.nanoTime();
             }
         }
         if (Math.sqrt(Math.pow(currentBirdBody.getPosition().x - woodHorizontalBody.getPosition().x, 2) + Math.pow(currentBirdBody.getPosition().y - woodHorizontalBody.getPosition().y, 2)) < 0.8f) {
-
+    
             score += 100;
             woodHorizontalBody.setLinearVelocity(0, 0);  // Stop the pig's movement
             woodHorizontalBody.setAngularVelocity(0);    // Stop any rotation
             woodHorizontalBody.setActive(false);         // Deactivate the physics body
             woodHorizontal.setVisible(false);
-
+            woodHorizontal.remove();
             // Reduce bird velocity
             currentBirdBody.setLinearVelocity(
                 currentBirdBody.getLinearVelocity().x ,
-                currentBirdBody.getLinearVelocity().y
+                currentBirdBody.getLinearVelocity().y 
             );
         }
         if (Math.sqrt(Math.pow(currentBirdBody.getPosition().x - woodVertical1Body.getPosition().x, 2) + Math.pow(currentBirdBody.getPosition().y - woodVertical1Body.getPosition().y, 2)) < 0.8f) {
-
+    
             score += 100;
             woodVertical1Body.setLinearVelocity(0, 0);  // Stop the pig's movement
             woodVertical1Body.setAngularVelocity(0);    // Stop any rotation
             woodVertical1Body.setActive(false);         // Deactivate the physics body
             woodVertical1.setVisible(false);
-
+            woodVertical1.remove();
             // Reduce bird velocity
             currentBirdBody.setLinearVelocity(
                 currentBirdBody.getLinearVelocity().x * 0.8f,
-                currentBirdBody.getLinearVelocity().y
+                currentBirdBody.getLinearVelocity().y 
             );
         }
         if (Math.sqrt(Math.pow(currentBirdBody.getPosition().x - woodVertical2Body.getPosition().x, 2) + Math.pow(currentBirdBody.getPosition().y - woodVertical2Body.getPosition().y, 2)) < 0.8f) {
-
+    
             score += 100;
             woodVertical2Body.setLinearVelocity(0, 0);  // Stop the pig's movement
             woodVertical2Body.setAngularVelocity(0);    // Stop any rotation
             woodVertical2Body.setActive(false);         // Deactivate the physics body
             woodVertical2.setVisible(false);
-
+            woodVertical2.remove();
             // Reduce bird velocity
             currentBirdBody.setLinearVelocity(
                 currentBirdBody.getLinearVelocity().x * 0.8f,
-                currentBirdBody.getLinearVelocity().y
+                currentBirdBody.getLinearVelocity().y 
             );
         }
-
+    
         // Check if the number of pigs is zero and 1 second has passed
         if (pigCount == 0 && contactDetected) {
             // If 1 second has passed since contact, switch to VictoryMenu1
-            if (TimeUtils.nanoTime() - timeOfContact > 1_000_000_000L) { // 1 second in nanoseconds
+            if (TimeUtils.nanoTime() - timeOfContact > 300_000_000L) { // 1 second in nanoseconds
                 ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new VictoryMenu1());
                 contactDetected = false;  // Reset the flag to allow new contact detection
             }
         }
     }
-
+    
 
     @Override
     public void beginContact(Contact contact) {
@@ -483,7 +508,6 @@ public class Level1Screen implements Screen, ContactListener {
 
             // Check for victory condition
             if (pigCount == 0) {
-                gameProgress.unlockNextLevel();
                 ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new VictoryMenu1());
             }
         }
