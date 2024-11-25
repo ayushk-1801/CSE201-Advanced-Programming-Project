@@ -26,7 +26,7 @@ public class Level1Screen implements Screen, ContactListener {
 
     // Box2D physics world
     private World world;
-    private static final float PPM = 100; // Pixels per meter
+    private static final float PPM = 1; // Pixels per meter
     private static final float TIME_STEP = 1 / 60f;
     private static final int VELOCITY_ITERATIONS = 6;
     private static final int POSITION_ITERATIONS = 2;
@@ -103,7 +103,7 @@ public class Level1Screen implements Screen, ContactListener {
         // Create the pig and position it inside the fort
         pig = new Image(pigTexture);
         pig.setPosition(Gdx.graphics.getWidth() / 2f - pig.getWidth() / 2, Gdx.graphics.getHeight() / 2f);
-        pig.moveBy(400, -400);
+//        pig.moveBy(400, -400);
         pigBody = createCircularBody(pig, DENSITY, FRICTION, RESTITUTION);
 
         // Create two vertical wood blocks (fort sides)
@@ -111,22 +111,22 @@ public class Level1Screen implements Screen, ContactListener {
         woodVertical2 = new Image(woodVerticalTexture);
         woodVertical1.setPosition(Gdx.graphics.getWidth() / 2f - 80, pig.getY() - 30);
         woodVertical2.setPosition(Gdx.graphics.getWidth() / 2f + pig.getWidth() - 30, pig.getY() - 30);
-        woodVertical1.moveBy(400, 35);
-        woodVertical2.moveBy(400, 35);
+//        woodVertical1.moveBy(400, 35);
+//        woodVertical2.moveBy(400, 35);
         woodVertical1Body = createRectangularBody(woodVertical1, false, DENSITY, FRICTION, RESTITUTION);
         woodVertical2Body = createRectangularBody(woodVertical2, false, DENSITY, FRICTION, RESTITUTION);
 
         // Create a horizontal wood block (fort top)
         woodHorizontal = new Image(woodHorizontalTexture);
         woodHorizontal.setPosition(Gdx.graphics.getWidth() / 2f - 20, pig.getY() + pig.getHeight() - 10);
-        woodHorizontal.moveBy(310, 115);
+//        woodHorizontal.moveBy(310, 115);
         woodHorizontalBody = createRectangularBody(woodHorizontal, false, DENSITY, FRICTION, RESTITUTION);
 
         // Create the slingshot and position it on the left side of the screen
         slingshot = new Image(slingshotTexture);
         slingshot.setSize(slingshot.getWidth() / 5, slingshot.getHeight() / 5);
-        slingshot.setPosition(100, Gdx.graphics.getHeight() / 2f - slingshot.getHeight() / 2);
-        slingshot.moveBy(200, -330);
+        slingshot.setPosition(300, 150);
+//        slingshot.moveBy(200, -330);
 
         // Create the birds and their physics bodies
         redBird = new Image(redBirdTexture);
@@ -254,7 +254,7 @@ public class Level1Screen implements Screen, ContactListener {
     private void createGround() {
         BodyDef groundDef = new BodyDef();
         groundDef.type = BodyDef.BodyType.StaticBody;
-        groundDef.position.set(0, 0.35f); // Slightly above 0 to be visible
+        groundDef.position.set(0, 130); // Slightly above 0 to be visible
 
         groundBody = world.createBody(groundDef);
 
@@ -272,12 +272,12 @@ public class Level1Screen implements Screen, ContactListener {
     private Body createCircularBody(Image image, float density, float friction, float restitution) {
         BodyDef bodyDef = new BodyDef();
         bodyDef.type = BodyDef.BodyType.DynamicBody;
-        bodyDef.position.set((image.getX() + image.getWidth() / 2) / PPM, (image.getY() + image.getHeight() / 2) / PPM);
+        bodyDef.position.set((image.getX() + image.getWidth() / 2) , (image.getY() + image.getHeight() / 2) );
 
         Body body = world.createBody(bodyDef);
 
         CircleShape circle = new CircleShape();
-        circle.setRadius(image.getWidth() / 3/ PPM);
+        circle.setRadius(image.getWidth() / 2.5f);
 
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = circle;
@@ -298,27 +298,27 @@ public class Level1Screen implements Screen, ContactListener {
             (image.getX() + image.getWidth() / 2) / PPM,
             (image.getY() + image.getHeight() / 2) / PPM
         );
-    
+
         Body body = world.createBody(bodyDef);
-    
+
         PolygonShape rectangle = new PolygonShape();
         rectangle.setAsBox(
             (image.getWidth() / 2) / PPM,
             (image.getHeight() / 2) / PPM
         );
-    
+
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = rectangle;
         fixtureDef.density = density;
         fixtureDef.friction = friction;
         fixtureDef.restitution = restitution;
-    
+
         body.createFixture(fixtureDef);
         rectangle.dispose();
-    
+
         return body;
     }
-    
+
 
     private void updateImagePosition(Image image, Body body) {
         Vector2 position = body.getPosition();
@@ -365,7 +365,7 @@ public class Level1Screen implements Screen, ContactListener {
         checkContact();
         // Check for defeat condition
         if (birdQueue.isEmpty() && pigCount > 0) {
-            ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new DefeatMenu());
+            ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new DefeatMenu1());
         }
 
         // Render debug information
@@ -381,20 +381,20 @@ public class Level1Screen implements Screen, ContactListener {
                 if (launched && TimeUtils.nanoTime() - launchTime > 500000000L) {
                     // Get the bird's current velocity
                     Vector2 currentVelocity = currentBirdBody.getLinearVelocity();
-                    
+
                     // Double the velocity
                     Vector2 newVelocity = currentVelocity.scl(2f);
-                    
+
                     // Apply the new velocity to the bird
                     currentBirdBody.setLinearVelocity(newVelocity);
-                    
+
                     // Optionally, prevent repeated activation
                     launched = false; // Or use a separate flag like `abilityUsed = true;`
                 }
             }
         }
     }
-    
+
     private void drawTrajectory() {
         shapeRenderer.setProjectionMatrix(stage.getCamera().combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
@@ -419,30 +419,30 @@ public class Level1Screen implements Screen, ContactListener {
     public void checkContact() {
         // Calculate distance between bird and pig
         if (Math.sqrt(Math.pow(currentBirdBody.getPosition().x - pigBody.getPosition().x, 2) + Math.pow(currentBirdBody.getPosition().y - pigBody.getPosition().y, 2)) < 0.8f&&currentBirdBody.getLinearVelocity().x>1f) {
-    
+
             // Only handle the first contact
             if (!contactDetected) {
                 contactDetected = true;  // Set flag to true to prevent re-execution
                 score += 100;
-                pigCount--; 
-                pigBody.setLinearVelocity(0, 0); 
-                pigBody.setAngularVelocity(0);    
-                pigBody.setActive(false);         
-                pig.setVisible(false); 
+                pigCount--;
+                pigBody.setLinearVelocity(0, 0);
+                pigBody.setAngularVelocity(0);
+                pigBody.setActive(false);
+                pig.setVisible(false);
                 pig.remove();
-                
-    
+
+
                 // Reduce bird velocity
                 currentBirdBody.setLinearVelocity(
                     currentBirdBody.getLinearVelocity().x * 0.8f,
-                    currentBirdBody.getLinearVelocity().y 
+                    currentBirdBody.getLinearVelocity().y
                 );
-    
+
                 timeOfContact = TimeUtils.nanoTime();
             }
         }
         if (Math.sqrt(Math.pow(currentBirdBody.getPosition().x - woodHorizontalBody.getPosition().x, 2) + Math.pow(currentBirdBody.getPosition().y - woodHorizontalBody.getPosition().y, 2)) < 0.8f) {
-    
+
             score += 100;
             woodHorizontalBody.setLinearVelocity(0, 0);  // Stop the pig's movement
             woodHorizontalBody.setAngularVelocity(0);    // Stop any rotation
@@ -452,11 +452,11 @@ public class Level1Screen implements Screen, ContactListener {
             // Reduce bird velocity
             currentBirdBody.setLinearVelocity(
                 currentBirdBody.getLinearVelocity().x ,
-                currentBirdBody.getLinearVelocity().y 
+                currentBirdBody.getLinearVelocity().y
             );
         }
         if (Math.sqrt(Math.pow(currentBirdBody.getPosition().x - woodVertical1Body.getPosition().x, 2) + Math.pow(currentBirdBody.getPosition().y - woodVertical1Body.getPosition().y, 2)) < 0.8f) {
-    
+
             score += 100;
             woodVertical1Body.setLinearVelocity(0, 0);  // Stop the pig's movement
             woodVertical1Body.setAngularVelocity(0);    // Stop any rotation
@@ -466,11 +466,11 @@ public class Level1Screen implements Screen, ContactListener {
             // Reduce bird velocity
             currentBirdBody.setLinearVelocity(
                 currentBirdBody.getLinearVelocity().x * 0.8f,
-                currentBirdBody.getLinearVelocity().y 
+                currentBirdBody.getLinearVelocity().y
             );
         }
         if (Math.sqrt(Math.pow(currentBirdBody.getPosition().x - woodVertical2Body.getPosition().x, 2) + Math.pow(currentBirdBody.getPosition().y - woodVertical2Body.getPosition().y, 2)) < 0.8f) {
-    
+
             score += 100;
             woodVertical2Body.setLinearVelocity(0, 0);  // Stop the pig's movement
             woodVertical2Body.setAngularVelocity(0);    // Stop any rotation
@@ -480,10 +480,10 @@ public class Level1Screen implements Screen, ContactListener {
             // Reduce bird velocity
             currentBirdBody.setLinearVelocity(
                 currentBirdBody.getLinearVelocity().x * 0.8f,
-                currentBirdBody.getLinearVelocity().y 
+                currentBirdBody.getLinearVelocity().y
             );
         }
-    
+
         // Check if the number of pigs is zero and 1 second has passed
         if (pigCount == 0 && contactDetected) {
             // If 1 second has passed since contact, switch to VictoryMenu1
@@ -493,7 +493,7 @@ public class Level1Screen implements Screen, ContactListener {
             }
         }
     }
-    
+
 
     @Override
     public void beginContact(Contact contact) {
