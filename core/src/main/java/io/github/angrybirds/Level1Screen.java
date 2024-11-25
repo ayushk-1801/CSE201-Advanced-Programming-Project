@@ -113,14 +113,14 @@ public class Level1Screen implements Screen, ContactListener {
 
         redBird = new Image(redBirdTexture);
         redBird.setSize(redBird.getWidth() / 5, redBird.getHeight() / 5);
-        redBird.setPosition(-160, slingshot.getY());
+        redBird.setPosition(100, 150);
 
         chuckBird = new Image(chuckBirdTexture);
-        chuckBird.setPosition(160, slingshot.getY());
+        chuckBird.setPosition(100, 150);
         chuckBird.setSize(redBird.getWidth(), redBird.getHeight());
 
         bombBird = new Image(bombBirdTexture);
-        bombBird.setPosition(120, slingshot.getY());
+        bombBird.setPosition(25, 150);
         bombBird.setSize(redBird.getWidth(), redBird.getHeight());
 
         redBirdBody = createCircularBody(redBird, DENSITY, FRICTION, 0.8f);
@@ -150,6 +150,9 @@ public class Level1Screen implements Screen, ContactListener {
 
         stage.addActor(pause);
         stage.addActor(skip);
+        stage.addActor(redBird);
+        stage.addActor(chuckBird);
+        stage.addActor(bombBird);
 
         birdQueue = new LinkedList<>();
         birdQueue.add(redBird);
