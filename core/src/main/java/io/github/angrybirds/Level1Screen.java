@@ -58,12 +58,18 @@ public class Level1Screen implements Screen, ContactListener {
     private int score;
     private int pigCount;
     private int pigHealth;
+    private int blockHealth1, blockHealth2, blockHealth3;
     private boolean contactDetected;
     private long timeOfContact = -1;
     private boolean launched = false;
     private Box2DDebugRenderer debugRenderer;
     private ShapeRenderer shapeRenderer;
     private boolean destroyPigBody = false;
+    private boolean destroyBlock1Body = false;
+    private boolean destroyBlock2Body = false;
+    private boolean destroyBlock3Body = false;
+    private int currentBirdIndex = 0;
+    private boolean birdLaunched = false;
 
     @Override
     public void show() {
@@ -73,6 +79,9 @@ public class Level1Screen implements Screen, ContactListener {
         score = 0;
         pigCount = 1;
         pigHealth = 200;
+        blockHealth1 = 50;
+        blockHealth2 = 50;
+        blockHealth3 = 50;
         world.setContactListener(this);
 
         createGround();
@@ -124,10 +133,6 @@ public class Level1Screen implements Screen, ContactListener {
         chuckBird.setPosition(25, 150);
         chuckBird.setSize(redBird1.getWidth(), redBird1.getHeight());
 
-        redBirdBody1 = createCircularBody(redBird1, DENSITY, FRICTION, 0.8f);
-        chuckBirdBody = createCircularBody(chuckBird, DENSITY, FRICTION, 0.8f);
-        redBirdBody2 = createCircularBody(redBird2, DENSITY, FRICTION, 0.8f);
-
         pause = new Image(pauseTexture);
         pause.setPosition(20, Gdx.graphics.getHeight() - pause.getHeight() - 80);
         pause.setSize(150, 150);
@@ -151,69 +156,74 @@ public class Level1Screen implements Screen, ContactListener {
 
         stage.addActor(pause);
         stage.addActor(skip);
-        stage.addActor(redBird1);
-        stage.addActor(chuckBird);
-        stage.addActor(redBird2);
 
         birdQueue = new LinkedList<>();
         birdQueue.add(redBird1);
-        birdQueue.add(redBird2);
         birdQueue.add(chuckBird);
+        birdQueue.add(redBird2);
 
         setNextBird();
     }
 
     private void setNextBird() {
-        if (!birdQueue.isEmpty()) {
-            currentBird = birdQueue.poll();
-            currentBird.setPosition(catapultPosition.x - currentBird.getWidth() / 2, catapultPosition.y - currentBird.getHeight() / 2);
-            currentBirdBody = createCircularBody(currentBird, DENSITY, FRICTION, RESTITUTION);
-            currentBirdBody.setTransform(catapultPosition.x, catapultPosition.y, 0);
-            currentBirdBody.setActive(false); // Deactivate the bird body until it is launched
+        if (birdQueue.isEmpty()) {
+            currentBird = null;
+            return;
         }
+
+        currentBird = birdQueue.poll();
+        currentBird.setPosition(catapultPosition.x - currentBird.getWidth() / 2, catapultPosition.y - currentBird.getHeight() / 2);
+        currentBirdBody = createCircularBody(currentBird, DENSITY, FRICTION, RESTITUTION);
+        currentBirdBody.setTransform(catapultPosition.x, catapultPosition.y, 0);
+        currentBirdBody.setActive(true);
+        currentBird.setVisible(true);
     }
 
     private void handleInput() {
-    Vector2 touchPos = new Vector2(Gdx.input.getX(), Gdx.input.getY());
-    stage.getViewport().unproject(touchPos);
+        Vector2 touchPos = new Vector2(Gdx.input.getX(), Gdx.input.getY());
+        stage.getViewport().unproject(touchPos);
 
-    if (touchPos.dst(catapultPosition) <= catapultRadius) {
-        Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Hand);
-    } else {
-        Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Arrow);
-    }
-
-    if (Gdx.input.isTouched()) {
-        if (!isDragging) {
-            if (touchPos.dst(catapultPosition) <= catapultRadius) {
-                isDragging = true;
-                initialTouchPosition = new Vector2(touchPos);
-                dragPosition = new Vector2(touchPos);
-                return;
-            }
+        if (touchPos.dst(catapultPosition) <= catapultRadius) {
+            Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Hand);
+        } else {
+            Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Arrow);
         }
+        currentBirdBody.setActive(true);
 
-        if (isDragging) {
-            dragPosition.set(touchPos);
-            Vector2 direction = dragPosition.cpy().sub(catapultPosition);
-            if (direction.len() > catapultRadius) {
-                direction.nor().scl(catapultRadius);
-                dragPosition.set(catapultPosition).add(direction);
+        if (Gdx.input.isTouched()) {
+            if (!isDragging) {
+                if (touchPos.dst(catapultPosition) <= catapultRadius) {
+                    isDragging = true;
+                    initialTouchPosition = new Vector2(touchPos);
+                    dragPosition = new Vector2(touchPos);
+                    return;
+                }
             }
-            currentBirdBody.setTransform(dragPosition.x, dragPosition.y, 0);
 
-            currentBird.setPosition(dragPosition.x - currentBird.getWidth() / 2, dragPosition.y - currentBird.getHeight() / 2);
+            if (isDragging) {
+                dragPosition.set(touchPos);
+                Vector2 direction = dragPosition.cpy().sub(catapultPosition);
+                if (direction.len() > catapultRadius) {
+                    direction.nor().scl(catapultRadius);
+                    dragPosition.set(catapultPosition).add(direction);
+                }
+                currentBirdBody.setTransform(dragPosition.x, dragPosition.y, 0);
+
+                currentBird.setPosition(dragPosition.x - currentBird.getWidth() / 2, dragPosition.y - currentBird.getHeight() / 2);
+            }
+        } else if (isDragging) {
+            Vector2 releaseVelocity = catapultPosition.cpy().sub(dragPosition).scl(500);
+            currentBirdBody.setLinearVelocity(releaseVelocity.x, releaseVelocity.y);
+            currentBirdBody.setActive(true);
+            launched = true;
+            currentBirdBody.setGravityScale(1f);
+            launchTime = TimeUtils.nanoTime();
+            isDragging = false;
+
+            // Set the birdLaunched flag to true
+            birdLaunched = true;
         }
-    } else if (isDragging) {
-        Vector2 releaseVelocity = catapultPosition.cpy().sub(dragPosition).scl(5);
-        currentBirdBody.setLinearVelocity(releaseVelocity.x, releaseVelocity.y);
-        currentBirdBody.setActive(true); // Activate the bird body when launched
-        launched = true;
-        currentBirdBody.setGravityScale(1f);
-        launchTime = TimeUtils.nanoTime();
-        isDragging = false;
     }
-}
 
     private void createGround() {
         BodyDef groundDef = new BodyDef();
@@ -258,18 +268,12 @@ public class Level1Screen implements Screen, ContactListener {
     private Body createRectangularBody(Sprite sprite, boolean isStatic, float density, float friction, float restitution) {
         BodyDef bodyDef = new BodyDef();
         bodyDef.type = isStatic ? BodyDef.BodyType.StaticBody : BodyDef.BodyType.DynamicBody;
-        bodyDef.position.set(
-            (sprite.getX() + sprite.getWidth() / 2),
-            (sprite.getY() + sprite.getHeight() / 2)
-        );
+        bodyDef.position.set((sprite.getX() + sprite.getWidth() / 2), (sprite.getY() + sprite.getHeight() / 2));
 
         Body body = world.createBody(bodyDef);
 
         PolygonShape rectangle = new PolygonShape();
-        rectangle.setAsBox(
-            (sprite.getWidth() / 2),
-            (sprite.getHeight() / 2)
-        );
+        rectangle.setAsBox((sprite.getWidth() / 2), (sprite.getHeight() / 2));
 
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = rectangle;
@@ -330,7 +334,7 @@ public class Level1Screen implements Screen, ContactListener {
         if (launchTime != -1 && TimeUtils.nanoTime() - launchTime > 10 * 1000000000L) {
             currentBirdBody.setLinearVelocity(0, 0);
             currentBirdBody.setAngularVelocity(0);
-            currentBirdBody.setActive(false);
+//            currentBirdBody.setActive(false);
             currentBird.setVisible(false);
             launchTime = -1;
             setNextBird();
@@ -340,9 +344,21 @@ public class Level1Screen implements Screen, ContactListener {
             currentBird.setVisible(false);
             setNextBird();
         }
+
+        if (contactDetected) {
+            setNextBird();
+            contactDetected = false;
+        }
+
+        // Set the bird's body to inactive if it has been launched
+        if (birdLaunched) {
+//            currentBirdBody.setActive(false);
+            birdLaunched = false;
+        }
+
         checkContact();
 
-        if (birdQueue.isEmpty() && pigCount > 0) {
+        if (currentBirdIndex >= 3 && pigCount > 0) {
             ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new DefeatMenu1());
         }
 
@@ -355,6 +371,18 @@ public class Level1Screen implements Screen, ContactListener {
                     ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new VictoryMenu1(score));
                 }
             }, 1);
+        }
+        if (destroyBlock1Body) {
+            world.destroyBody(woodVertical1Body);
+            destroyBlock1Body = false;
+        }
+        if (destroyBlock2Body) {
+            world.destroyBody(woodVertical2Body);
+            destroyBlock2Body = false;
+        }
+        if (destroyBlock3Body) {
+            world.destroyBody(woodHorizontalBody);
+            destroyBlock3Body = false;
         }
 
         debugRenderer.render(world, stage.getCamera().combined);
@@ -385,17 +413,14 @@ public class Level1Screen implements Screen, ContactListener {
         shapeRenderer.setColor(1, 0, 0, 1);
 
         Vector2 start = new Vector2(currentBirdBody.getPosition().x, currentBirdBody.getPosition().y);
-        Vector2 velocity = catapultPosition.cpy().sub(dragPosition).scl(6);
+        Vector2 velocity = catapultPosition.cpy().sub(dragPosition).scl(4);
 
         float timeStep = 1 / 60f;
         int numSteps = 100;
 
         for (int i = 0; i < numSteps; i++) {
             float t = i * timeStep;
-            Vector2 position = new Vector2(
-                start.x + velocity.x * t,
-                start.y + velocity.y * t + 0.5f * world.getGravity().y * t * t
-            );
+            Vector2 position = new Vector2(start.x + velocity.x * t, start.y + velocity.y * t + 0.5f * -9.8f * t * t);
             shapeRenderer.circle(position.x, position.y, 2);
         }
 
@@ -413,10 +438,7 @@ public class Level1Screen implements Screen, ContactListener {
                     pig.setPosition(-1000, -1000);
                     pig.setVisible(false);
                 }
-                currentBirdBody.setLinearVelocity(
-                    currentBirdBody.getLinearVelocity().x * 0.8f,
-                    currentBirdBody.getLinearVelocity().y
-                );
+                currentBirdBody.setLinearVelocity(currentBirdBody.getLinearVelocity().x * 0.8f, currentBirdBody.getLinearVelocity().y);
                 Vector2 newVelocity = currentBirdBody.getLinearVelocity().scl(5f);
                 currentBirdBody.setLinearVelocity(newVelocity);
                 timeOfContact = TimeUtils.nanoTime();
@@ -426,28 +448,19 @@ public class Level1Screen implements Screen, ContactListener {
             score += 100;
             woodHorizontalBody.setLinearVelocity(0, 0);
             woodHorizontalBody.setAngularVelocity(0);
-            currentBirdBody.setLinearVelocity(
-                currentBirdBody.getLinearVelocity().x,
-                currentBirdBody.getLinearVelocity().y
-            );
+            currentBirdBody.setLinearVelocity(currentBirdBody.getLinearVelocity().x, currentBirdBody.getLinearVelocity().y);
         }
         if (Math.sqrt(Math.pow(currentBirdBody.getPosition().x - woodVertical1Body.getPosition().x, 2) + Math.pow(currentBirdBody.getPosition().y - woodVertical1Body.getPosition().y, 2)) < 0.8f) {
             score += 100;
             woodVertical1Body.setLinearVelocity(0, 0);
             woodVertical1Body.setAngularVelocity(0);
-            currentBirdBody.setLinearVelocity(
-                currentBirdBody.getLinearVelocity().x * 0.8f,
-                currentBirdBody.getLinearVelocity().y
-            );
+            currentBirdBody.setLinearVelocity(currentBirdBody.getLinearVelocity().x * 0.8f, currentBirdBody.getLinearVelocity().y);
         }
         if (Math.sqrt(Math.pow(currentBirdBody.getPosition().x - woodVertical2Body.getPosition().x, 2) + Math.pow(currentBirdBody.getPosition().y - woodVertical2Body.getPosition().y, 2)) < 0.8f) {
             score += 100;
             woodVertical2Body.setLinearVelocity(0, 0);
             woodVertical2Body.setAngularVelocity(0);
-            currentBirdBody.setLinearVelocity(
-                currentBirdBody.getLinearVelocity().x * 0.8f,
-                currentBirdBody.getLinearVelocity().y
-            );
+            currentBirdBody.setLinearVelocity(currentBirdBody.getLinearVelocity().x * 0.8f, currentBirdBody.getLinearVelocity().y);
         }
         if (Math.sqrt(Math.pow(pigBody.getPosition().x - woodHorizontalBody.getPosition().x, 2) + Math.pow(pigBody.getPosition().y - woodHorizontalBody.getPosition().y, 2)) < 0.8f) {
             pigHealth -= 50;
@@ -496,31 +509,78 @@ public class Level1Screen implements Screen, ContactListener {
             return;
         }
 
-        if ((bodyA.equals(pigBody) || bodyB.equals(pigBody)) ||
-            (bodyA.equals(redBirdBody1) || bodyB.equals(redBirdBody1)) ||
-            (bodyA.equals(chuckBirdBody) || bodyB.equals(chuckBirdBody)) ||
-            (bodyA.equals(redBirdBody2) || bodyB.equals(redBirdBody2)) ||
-            (bodyA.equals(woodVertical1Body) || bodyB.equals(woodVertical1Body)) ||
-            (bodyA.equals(woodVertical2Body) || bodyB.equals(woodVertical2Body)) ||
-            (bodyA.equals(woodHorizontalBody) || bodyB.equals(woodHorizontalBody))) {
+        if ((bodyA.equals(pigBody) || bodyB.equals(pigBody)) || (bodyA.equals(redBirdBody1) || bodyB.equals(redBirdBody1)) || (bodyA.equals(chuckBirdBody) || bodyB.equals(chuckBirdBody)) || (bodyA.equals(redBirdBody2) || bodyB.equals(redBirdBody2)) || (bodyA.equals(woodVertical1Body) || bodyB.equals(woodVertical1Body)) || (bodyA.equals(woodVertical2Body) || bodyB.equals(woodVertical2Body)) || (bodyA.equals(woodHorizontalBody) || bodyB.equals(woodHorizontalBody))) {
 
             System.out.println("Contact detected between: " + getBodyName(bodyA) + " and " + getBodyName(bodyB));
 
+            Vector2 birdVelocity = currentBirdBody.getLinearVelocity();
+            float speed = birdVelocity.len();
             if (bodyA.equals(pigBody) || bodyB.equals(pigBody)) {
-                pigHealth -= 50; // Decrease pig health by 50
-                System.out.println("Pig Health: " + pigHealth);
-                if (pigHealth <= 100 && pigHealth > 0) {
-                    pig.setDrawable(new TextureRegionDrawable(new TextureRegion(new Texture("birds_piggies/normal_pig_damaged.png")))); // Change pig image when health is below 100
+                if ((bodyA.equals(woodVertical1Body) || bodyB.equals(woodVertical1Body)) || (bodyA.equals(woodVertical2Body) || bodyB.equals(woodVertical2Body)) || (bodyA.equals(woodHorizontalBody) || bodyB.equals(woodHorizontalBody))) {
+                    pigHealth -= 50;
+                    System.out.println("Pig Health: " + pigHealth);
+                    if (pigHealth <= 100 && pigHealth > 0) {
+                        pig.setDrawable(new TextureRegionDrawable(new TextureRegion(new Texture("birds_piggies/normal_pig_damaged.png"))));
+                    }
+                    if (pigHealth <= 0) {
+                        pigCount--;
+                        pig.setPosition(-1000, -1000);
+                        pig.setVisible(false);
+                        destroyPigBody = true;
+                        pig.setDrawable(new TextureRegionDrawable(new TextureRegion(new Texture("birds_piggies/empty.png"))));
+                    }
                 }
-                if (pigHealth <= 0) {
-                    pigCount--;
-                    pig.setPosition(-1000, -1000);
-                    pig.setVisible(false);
-                    destroyPigBody = true;
-                    pig.setDrawable(new TextureRegionDrawable(new TextureRegion(new Texture("birds_piggies/empty.png")))); // Change pig image when dead
+            }
+
+            if (speed > 80) {
+                if (bodyA.equals(pigBody) || bodyB.equals(pigBody)) {
+                    pigHealth -= 50;
+                    System.out.println("Pig Health: " + pigHealth);
+                    if (pigHealth <= 100 && pigHealth > 0) {
+                        pig.setDrawable(new TextureRegionDrawable(new TextureRegion(new Texture("birds_piggies/normal_pig_damaged.png"))));
+                    }
+                    if (pigHealth <= 0) {
+                        pigCount--;
+                        pig.setPosition(-1000, -1000);
+                        pig.setVisible(false);
+                        destroyPigBody = true;
+                        pig.setDrawable(new TextureRegionDrawable(new TextureRegion(new Texture("birds_piggies/empty.png"))));
+                    }
+                }
+                if (bodyA.equals(woodVertical1Body) || bodyB.equals(woodVertical1Body)) {
+                    if (bodyA.equals(currentBirdBody) || bodyB.equals(currentBirdBody)) {
+                        blockHealth1 -= 50;
+                        if (blockHealth1 <= 0) {
+                            woodVertical1.setPosition(-1000, -1000);
+                            destroyBlock1Body = true;
+                            woodVertical1.setTexture(new Texture("birds_piggies/empty.png"));
+                        }
+                    }
+                }
+                if (bodyA.equals(woodVertical2Body) || bodyB.equals(woodVertical2Body)) {
+                    if (bodyA.equals(currentBirdBody) || bodyB.equals(currentBirdBody)) {
+                        blockHealth2 -= 50;
+                        if (blockHealth2 <= 0) {
+                            woodVertical2.setPosition(-1000, -1000);
+                            destroyBlock2Body = true;
+                            woodVertical2.setTexture(new Texture("birds_piggies/empty.png"));
+                        }
+                    }
+                }
+                if (bodyA.equals(woodHorizontalBody) || bodyB.equals(woodHorizontalBody)) {
+                    if (bodyA.equals(currentBirdBody) || bodyB.equals(currentBirdBody)) {
+                        blockHealth3 -= 50;
+                        if (blockHealth3 <= 0) {
+                            woodHorizontal.setPosition(-1000, -1000);
+                            destroyBlock3Body = true;
+                            woodHorizontal.setTexture(new Texture("birds_piggies/empty.png"));
+                        }
+                    }
                 }
             }
         }
+        birdLaunched = true;
+
     }
 
 
@@ -533,14 +593,8 @@ public class Level1Screen implements Screen, ContactListener {
             return;
         }
 
-        if ((bodyA.equals(pigBody) || bodyB.equals(pigBody)) ||
-            (bodyA.equals(redBirdBody1) || bodyB.equals(redBirdBody1)) ||
-            (bodyA.equals(chuckBirdBody) || bodyB.equals(chuckBirdBody)) ||
-            (bodyA.equals(redBirdBody2) || bodyB.equals(redBirdBody2)) ||
-            (bodyA.equals(woodVertical1Body) || bodyB.equals(woodVertical1Body)) ||
-            (bodyA.equals(woodVertical2Body) || bodyB.equals(woodVertical2Body)) ||
-            (bodyA.equals(woodHorizontalBody) || bodyB.equals(woodHorizontalBody))) {
-            System.out.println("Contact ended between: " + getBodyName(bodyA) + " and " + getBodyName(bodyB));
+        if ((bodyA.equals(pigBody) || bodyB.equals(pigBody)) || (bodyA.equals(redBirdBody1) || bodyB.equals(redBirdBody1)) || (bodyA.equals(chuckBirdBody) || bodyB.equals(chuckBirdBody)) || (bodyA.equals(redBirdBody2) || bodyB.equals(redBirdBody2)) || (bodyA.equals(woodVertical1Body) || bodyB.equals(woodVertical1Body)) || (bodyA.equals(woodVertical2Body) || bodyB.equals(woodVertical2Body)) || (bodyA.equals(woodHorizontalBody) || bodyB.equals(woodHorizontalBody))) {
+//            System.out.println("Contact ended between: " + getBodyName(bodyA) + " and " + getBodyName(bodyB));
         }
     }
 
