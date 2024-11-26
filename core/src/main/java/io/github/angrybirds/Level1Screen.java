@@ -16,7 +16,6 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.TimeUtils;
-import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 import java.util.LinkedList;
@@ -24,9 +23,9 @@ import java.util.Queue;
 
 public class Level1Screen implements Screen, ContactListener {
     private static final float TIME_STEP = 1 / 60f;
-    private static final int VELOCITY_ITERATIONS = 20;
-    private static final int POSITION_ITERATIONS = 20;
-    private final float FRICTION = 10f;
+    private static final int VELOCITY_ITERATIONS = 6;
+    private static final int POSITION_ITERATIONS = 2;
+    private final float FRICTION = 100f;
     private final float DENSITY = 1f;
     private final float RESTITUTION = 0.2f;
     private final Vector2 catapultPosition = new Vector2(300, 250);
@@ -38,14 +37,14 @@ public class Level1Screen implements Screen, ContactListener {
     private World world;
     private Body pigBody;
     private Body woodVertical1Body, woodVertical2Body, woodHorizontalBody;
-    private Body redBirdBody1, chuckBirdBody, redBirdBody2;
+    private Body redBirdBody, chuckBirdBody, bombBirdBody;
     private Body groundBody;
     private Image pig;
     private Sprite woodVertical1, woodVertical2, woodHorizontal;
     private Image slingshot;
     private Image pause;
     private Image skip;
-    private Image redBird1, chuckBird, redBird2;
+    private Image redBird, chuckBird, bombBird;
     private boolean isDragging;
     private Vector2 initialTouchPosition;
     private Vector2 dragPosition;
@@ -63,7 +62,6 @@ public class Level1Screen implements Screen, ContactListener {
     private boolean launched = false;
     private Box2DDebugRenderer debugRenderer;
     private ShapeRenderer shapeRenderer;
-    private boolean destroyPigBody = false;
 
     @Override
     public void show() {
@@ -92,6 +90,7 @@ public class Level1Screen implements Screen, ContactListener {
         Texture pauseTexture = new Texture("buttons/pause.png");
         Texture redBirdTexture = new Texture("birds_piggies/red.png");
         Texture chuckBirdTexture = new Texture("birds_piggies/chuck.png");
+        Texture bombBirdTexture = new Texture("birds_piggies/bomb.png");
 
         pig = new Image(pigTexture);
         pig.setPosition(1340, 200);
@@ -112,21 +111,21 @@ public class Level1Screen implements Screen, ContactListener {
         slingshot.setSize(slingshot.getWidth() / 5, slingshot.getHeight() / 5);
         slingshot.setPosition(300, 150);
 
-        redBird1 = new Image(redBirdTexture);
-        redBird1.setSize(redBird1.getWidth() / 5, redBird1.getHeight() / 5);
-//        redBird1.setPosition(100, 150);
-
-        redBird2 = new Image(redBirdTexture);
-        redBird2.setPosition(80, 150);
-        redBird2.setSize(redBird1.getWidth(), redBird1.getHeight());
+        redBird = new Image(redBirdTexture);
+        redBird.setSize(redBird.getWidth() / 5, redBird.getHeight() / 5);
+        redBird.setPosition(100, 150);
 
         chuckBird = new Image(chuckBirdTexture);
-        chuckBird.setPosition(25, 150);
-        chuckBird.setSize(redBird1.getWidth(), redBird1.getHeight());
+        chuckBird.setPosition(100, 150);
+        chuckBird.setSize(redBird.getWidth(), redBird.getHeight());
 
-        redBirdBody1 = createCircularBody(redBird1, DENSITY, FRICTION, 0.8f);
+        bombBird = new Image(bombBirdTexture);
+        bombBird.setPosition(25, 150);
+        bombBird.setSize(redBird.getWidth(), redBird.getHeight());
+
+        redBirdBody = createCircularBody(redBird, DENSITY, FRICTION, 0.8f);
         chuckBirdBody = createCircularBody(chuckBird, DENSITY, FRICTION, 0.8f);
-        redBirdBody2 = createCircularBody(redBird2, DENSITY, FRICTION, 0.8f);
+        bombBirdBody = createCircularBody(bombBird, DENSITY, FRICTION, 0.8f);
 
         pause = new Image(pauseTexture);
         pause.setPosition(20, Gdx.graphics.getHeight() - pause.getHeight() - 80);
@@ -144,21 +143,21 @@ public class Level1Screen implements Screen, ContactListener {
         skip.addListener(new InputListener() {
             @Override
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-                ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new VictoryMenu1(score));
+                ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new VictoryMenu1());
                 return true;
             }
         });
 
         stage.addActor(pause);
         stage.addActor(skip);
-        stage.addActor(redBird1);
+        stage.addActor(redBird);
         stage.addActor(chuckBird);
-        stage.addActor(redBird2);
+        stage.addActor(bombBird);
 
         birdQueue = new LinkedList<>();
-        birdQueue.add(redBird1);
-        birdQueue.add(redBird2);
+        birdQueue.add(redBird);
         birdQueue.add(chuckBird);
+        birdQueue.add(bombBird);
 
         setNextBird();
     }
@@ -308,9 +307,7 @@ public class Level1Screen implements Screen, ContactListener {
         stage.act(Gdx.graphics.getDeltaTime());
         batch.begin();
         batch.draw(bgImage, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        if (pig.isVisible()) {
-            pig.draw(batch, 1);
-        }
+        pig.draw(batch, 1);
         woodVertical1.draw(batch);
         woodVertical2.draw(batch);
         woodHorizontal.draw(batch);
@@ -344,17 +341,6 @@ public class Level1Screen implements Screen, ContactListener {
 
         if (birdQueue.isEmpty() && pigCount > 0) {
             ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new DefeatMenu1());
-        }
-
-        if (destroyPigBody) {
-            world.destroyBody(pigBody);
-            destroyPigBody = false;
-            Timer.schedule(new Timer.Task() {
-                @Override
-                public void run() {
-                    ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new VictoryMenu1(score));
-                }
-            }, 1);
         }
 
         debugRenderer.render(world, stage.getCamera().combined);
@@ -478,7 +464,7 @@ public class Level1Screen implements Screen, ContactListener {
 
         if (pigCount == 0 && contactDetected) {
             if (TimeUtils.nanoTime() - timeOfContact > 300_000_000L) {
-                ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new VictoryMenu1(score));
+                ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new VictoryMenu1());
                 contactDetected = false;
             }
         }
@@ -486,67 +472,16 @@ public class Level1Screen implements Screen, ContactListener {
 
     @Override
     public void beginContact(Contact contact) {
-        Body bodyA = contact.getFixtureA().getBody();
-        Body bodyB = contact.getFixtureB().getBody();
-
-        if ((bodyA.equals(groundBody) || bodyB.equals(groundBody))) {
-            return;
-        }
-
-        if ((bodyA.equals(pigBody) || bodyB.equals(pigBody)) ||
-            (bodyA.equals(redBirdBody1) || bodyB.equals(redBirdBody1)) ||
-            (bodyA.equals(chuckBirdBody) || bodyB.equals(chuckBirdBody)) ||
-            (bodyA.equals(redBirdBody2) || bodyB.equals(redBirdBody2)) ||
-            (bodyA.equals(woodVertical1Body) || bodyB.equals(woodVertical1Body)) ||
-            (bodyA.equals(woodVertical2Body) || bodyB.equals(woodVertical2Body)) ||
-            (bodyA.equals(woodHorizontalBody) || bodyB.equals(woodHorizontalBody))) {
-
-            System.out.println("Contact detected between: " + getBodyName(bodyA) + " and " + getBodyName(bodyB));
-
-            if (bodyA.equals(pigBody) || bodyB.equals(pigBody)) {
-                pigHealth -= 50; // Decrease pig health by 50
-                System.out.println("Pig Health: " + pigHealth);
-                if (pigHealth <= 0) {
-                    pigCount--;
-                    pig.setPosition(-1000, -1000); // Move pig off-screen
-                    pig.setVisible(false); // Hide pig
-                    destroyPigBody = true; // Set flag to destroy pig body
-                    pig.setDrawable(new TextureRegionDrawable(new TextureRegion(new Texture("birds_piggies/empty.png")))); // Change pig image
-                }
-            }
+        if (contact.getFixtureA().getBody().equals(pigBody) || contact.getFixtureB().getBody().equals(pigBody)) {
+            contactDetected = true;
         }
     }
-
 
     @Override
     public void endContact(Contact contact) {
-        Body bodyA = contact.getFixtureA().getBody();
-        Body bodyB = contact.getFixtureB().getBody();
-
-        if ((bodyA.equals(groundBody) || bodyB.equals(groundBody))) {
-            return;
+        if (contact.getFixtureA().getBody().equals(pigBody) || contact.getFixtureB().getBody().equals(pigBody)) {
+            contactDetected = false;
         }
-
-        if ((bodyA.equals(pigBody) || bodyB.equals(pigBody)) ||
-            (bodyA.equals(redBirdBody1) || bodyB.equals(redBirdBody1)) ||
-            (bodyA.equals(chuckBirdBody) || bodyB.equals(chuckBirdBody)) ||
-            (bodyA.equals(redBirdBody2) || bodyB.equals(redBirdBody2)) ||
-            (bodyA.equals(woodVertical1Body) || bodyB.equals(woodVertical1Body)) ||
-            (bodyA.equals(woodVertical2Body) || bodyB.equals(woodVertical2Body)) ||
-            (bodyA.equals(woodHorizontalBody) || bodyB.equals(woodHorizontalBody))) {
-            System.out.println("Contact ended between: " + getBodyName(bodyA) + " and " + getBodyName(bodyB));
-        }
-    }
-
-    private String getBodyName(Body body) {
-        if (body.equals(pigBody)) return "Pig";
-        if (body.equals(redBirdBody1)) return "Red Bird 1";
-        if (body.equals(chuckBirdBody)) return "Chuck Bird";
-        if (body.equals(redBirdBody2)) return "Red Bird 2";
-        if (body.equals(woodVertical1Body)) return "Wood Vertical 1";
-        if (body.equals(woodVertical2Body)) return "Wood Vertical 2";
-        if (body.equals(woodHorizontalBody)) return "Wood Horizontal";
-        return "Unknown";
     }
 
     @Override
