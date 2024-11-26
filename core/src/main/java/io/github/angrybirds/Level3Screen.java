@@ -124,9 +124,9 @@ public class Level3Screen implements Screen, ContactListener {
 
         pig2 = new Image(pigTexture);
         pig2.setPosition(Gdx.graphics.getWidth() / 2f + pig2.getWidth() / 2, Gdx.graphics.getHeight() / 2f);
-        pig2.moveBy(350, -200);
+        pig2.moveBy(350, -230);
         pig2Body = createCircularBody(pig2, DENSITY, FRICTION, RESTITUTION);
-
+        
         helmetPigOnBlock = new Image(helmetPigTexture);
         helmetPigOnBlock.setPosition(Gdx.graphics.getWidth() / 2f - 100, Gdx.graphics.getHeight() / 2f);
         helmetPigOnBlock.moveBy(350, -400);
@@ -137,15 +137,25 @@ public class Level3Screen implements Screen, ContactListener {
 //        gunPig.setPosition(450, 450);
 //        gunPigBody = createCircularBody(gunPig, DENSITY, FRICTION, RESTITUTION);
 
-        // Create two vertical wood blocks (fort sides)
-        woodVertical1 = new Image(woodVerticalTexture);
-        woodVertical2 = new Image(woodVerticalTexture);
-        woodVertical1.setPosition(Gdx.graphics.getWidth() / 2f - 80, pig1.getY() - 30);
-        woodVertical2.setPosition(Gdx.graphics.getWidth() / 2f + pig1.getWidth() - 30, pig1.getY() - 30);
-        woodVertical1.moveBy(400, 35);
-        woodVertical2.moveBy(400, 35);
-        woodVertical1Body = createRectangularBody(woodVertical1, false, DENSITY, FRICTION, RESTITUTION);
-        woodVertical2Body = createRectangularBody(woodVertical2, false, DENSITY, FRICTION, RESTITUTION);
+      // Create two vertical wood blocks (fort sides)
+woodVertical1 = new Image(woodVerticalTexture);
+woodVertical2 = new Image(stoneVerticalTexture);
+
+// Set positions
+woodVertical1.setPosition(Gdx.graphics.getWidth() / 2f - 80, pig1.getY() - 30);
+woodVertical2.setPosition(Gdx.graphics.getWidth() / 2f + pig1.getWidth() - 30, pig1.getY() - 30);
+
+// Move images to adjust final positions
+woodVertical1.moveBy(400, 35);
+woodVertical2.moveBy(400, 35);
+
+// Make woodVertical2 the same size as woodVertical1
+woodVertical2.setSize(woodVertical1.getWidth(), woodVertical1.getHeight());  // Ensure same size
+
+// Create bodies with the same size
+woodVertical1Body = createRectangularBody(woodVertical1, false, DENSITY, FRICTION, RESTITUTION);
+woodVertical2Body = createRectangularBody(woodVertical2, false, DENSITY, FRICTION, RESTITUTION);
+
 
         // Create a horizontal wood block (fort top)
         woodHorizontal = new Image(woodHorizontalTexture);
@@ -153,6 +163,8 @@ public class Level3Screen implements Screen, ContactListener {
         woodHorizontal.moveBy(310, 115);
         woodHorizontalBody = createRectangularBody(woodHorizontal, false, DENSITY, FRICTION, RESTITUTION);
 
+        // Create an image for the block using the texture
+ 
         // Create the slingshot and position it on the left side of the screen
         slingshot = new Image(slingshotTexture);
         slingshot.setSize(slingshot.getWidth() / 5, slingshot.getHeight() / 5);
@@ -411,6 +423,9 @@ public class Level3Screen implements Screen, ContactListener {
             setNextBird();
         }
         checkContact();
+        if(!pig1.isVisible()&&!pig2.isVisible()&&!helmetPig.isVisible()&&!helmetPigOnBlock.isVisible()) {
+            ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new VictoryMenu3());
+        }
         // Check for defeat condition
         if (birdQueue.isEmpty() && pigCount > 0) {
             ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new DefeatMenu3());
@@ -458,9 +473,13 @@ public class Level3Screen implements Screen, ContactListener {
         }
         if (isContact(currentBirdBody, woodVertical1Body)) {
             handleWoodContact(woodVertical1, woodVertical1Body);
+            handleWoodContact(woodHorizontal, woodHorizontalBody);
+            handlePigContact(pig2, pig2Body);
         }
         if (isContact(currentBirdBody, woodVertical2Body)) {
             handleWoodContact(woodVertical2, woodVertical2Body);
+            handleWoodContact(woodHorizontal, woodHorizontalBody);
+            handlePigContact(pig2, pig2Body);
         }
 
         // Check if the number of pigs is zero and 1 second has passed
