@@ -6,7 +6,6 @@ import com.badlogic.gdx.graphics.Cursor;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
@@ -14,7 +13,6 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
-import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
@@ -344,23 +342,20 @@ public class Level1Screen implements Screen, ContactListener {
     }
 
     private void checkAbility() {
-    if (Gdx.input.justTouched()) {
-        if (currentBird.equals(chuckBird)) {
-            if (launched && TimeUtils.nanoTime() - launchTime > 500000000L) {
-                Vector2 currentVelocity = currentBirdBody.getLinearVelocity();
+        if (Gdx.input.justTouched()) {
+            if (currentBird.equals(chuckBird)) {
+                if (launched && TimeUtils.nanoTime() - launchTime > 500000000L) {
+                    Vector2 currentVelocity = currentBirdBody.getLinearVelocity();
 
-                Vector2 newVelocity = currentVelocity.scl(4f);
+                    Vector2 newVelocity = currentVelocity.scl(4f);
 
-                currentBirdBody.setLinearVelocity(newVelocity);
+                    currentBirdBody.setLinearVelocity(newVelocity);
 
-                Texture newTexture = new Texture("birds_piggies/chuck_fast.png");
-                currentBird.setDrawable(new TextureRegionDrawable(new TextureRegion(newTexture)));
-
-                launched = false;
+                    launched = false;
+                }
             }
         }
     }
-}
 
     private void drawTrajectory() {
         shapeRenderer.setProjectionMatrix(stage.getCamera().combined);
