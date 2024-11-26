@@ -16,6 +16,11 @@ public class VictoryMenu1 implements Screen {
     private Image menuButton;
     private Image restartButton;
     private Image victoryImage;
+    private int score;
+
+    public VictoryMenu1(int score) {
+        this.score = score;
+    }
 
     @Override
     public void show() {
