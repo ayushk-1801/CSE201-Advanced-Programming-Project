@@ -347,7 +347,7 @@ public class Level1Screen implements Screen, ContactListener {
                 if (launched && TimeUtils.nanoTime() - launchTime > 500000000L) {
                     Vector2 currentVelocity = currentBirdBody.getLinearVelocity();
 
-                    Vector2 newVelocity = currentVelocity.scl(4f);
+                    Vector2 newVelocity = currentVelocity.scl(2f);
 
                     currentBirdBody.setLinearVelocity(newVelocity);
 
@@ -392,8 +392,6 @@ public class Level1Screen implements Screen, ContactListener {
                     currentBirdBody.getLinearVelocity().x * 0.8f,
                     currentBirdBody.getLinearVelocity().y
                 );
-                Vector2 newVelocity = currentBirdBody.getLinearVelocity().scl(5f);
-                currentBirdBody.setLinearVelocity(newVelocity);
                 timeOfContact = TimeUtils.nanoTime();
             }
         }
