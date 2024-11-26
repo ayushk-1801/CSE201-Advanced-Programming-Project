@@ -344,23 +344,23 @@ public class Level1Screen implements Screen, ContactListener {
     }
 
     private void checkAbility() {
-        if (Gdx.input.justTouched()) {
-            if (currentBird.equals(chuckBird)) {
-                if (launched && TimeUtils.nanoTime() - launchTime > 500000000L) {
-                    Vector2 currentVelocity = currentBirdBody.getLinearVelocity();
+    if (Gdx.input.justTouched()) {
+        if (currentBird.equals(chuckBird)) {
+            if (launched && TimeUtils.nanoTime() - launchTime > 500000000L) {
+                Vector2 currentVelocity = currentBirdBody.getLinearVelocity();
 
-                    Vector2 newVelocity = currentVelocity.scl(4f);
+                Vector2 newVelocity = currentVelocity.scl(4f);
 
-                    currentBirdBody.setLinearVelocity(newVelocity);
+                currentBirdBody.setLinearVelocity(newVelocity);
 
-                    Texture newTexture = new Texture("birds_piggies/chuck_fast.png");
-                    currentBird.setDrawable(new TextureRegionDrawable(new TextureRegion(newTexture)));
+                Texture newTexture = new Texture("birds_piggies/chuck_fast.png");
+                currentBird.setDrawable(new TextureRegionDrawable(new TextureRegion(newTexture)));
 
-                    launched = false;
-                }
+                launched = false;
             }
         }
     }
+}
 
     private void drawTrajectory() {
         shapeRenderer.setProjectionMatrix(stage.getCamera().combined);
