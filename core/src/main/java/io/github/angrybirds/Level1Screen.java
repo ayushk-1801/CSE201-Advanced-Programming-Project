@@ -168,52 +168,51 @@ public class Level1Screen implements Screen, ContactListener {
             currentBird = birdQueue.poll();
             currentBird.setPosition(catapultPosition.x - currentBird.getWidth() / 2, catapultPosition.y - currentBird.getHeight() / 2);
             currentBirdBody = createCircularBody(currentBird, DENSITY, FRICTION, RESTITUTION);
-            currentBirdBody.setTransform(catapultPosition.x, catapultPosition.y, 0);
-            currentBirdBody.setActive(false); // Deactivate the bird body until it is launched
         }
     }
 
     private void handleInput() {
-    Vector2 touchPos = new Vector2(Gdx.input.getX(), Gdx.input.getY());
-    stage.getViewport().unproject(touchPos);
+        Vector2 touchPos = new Vector2(Gdx.input.getX(), Gdx.input.getY());
+        stage.getViewport().unproject(touchPos);
 
-    if (touchPos.dst(catapultPosition) <= catapultRadius) {
-        Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Hand);
-    } else {
-        Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Arrow);
-    }
-
-    if (Gdx.input.isTouched()) {
-        if (!isDragging) {
-            if (touchPos.dst(catapultPosition) <= catapultRadius) {
-                isDragging = true;
-                initialTouchPosition = new Vector2(touchPos);
-                dragPosition = new Vector2(touchPos);
-                return;
-            }
+        if (touchPos.dst(catapultPosition) <= catapultRadius) {
+            Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Hand);
+        } else {
+            Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Arrow);
         }
 
-        if (isDragging) {
-            dragPosition.set(touchPos);
-            Vector2 direction = dragPosition.cpy().sub(catapultPosition);
-            if (direction.len() > catapultRadius) {
-                direction.nor().scl(catapultRadius);
-                dragPosition.set(catapultPosition).add(direction);
+        if (Gdx.input.isTouched()) {
+            if (!isDragging) {
+                if (touchPos.dst(catapultPosition) <= catapultRadius) {
+                    isDragging = true;
+                    initialTouchPosition = new Vector2(touchPos);
+                    dragPosition = new Vector2(touchPos);
+                    return;
+                }
             }
+
+            if (isDragging) {
+                dragPosition.set(touchPos);
+                Vector2 direction = dragPosition.cpy().sub(catapultPosition);
+                if (direction.len() > catapultRadius) {
+                    direction.nor().scl(catapultRadius);
+                    dragPosition.set(catapultPosition).add(direction);
+                }
+                currentBirdBody.setTransform(dragPosition.x, dragPosition.y, 0);
+
+                currentBird.setPosition(dragPosition.x - currentBird.getWidth() / 2, dragPosition.y - currentBird.getHeight() / 2);
+            }
+        } else if (isDragging) {
             currentBirdBody.setTransform(dragPosition.x, dragPosition.y, 0);
 
-            currentBird.setPosition(dragPosition.x - currentBird.getWidth() / 2, dragPosition.y - currentBird.getHeight() / 2);
+            Vector2 releaseVelocity = catapultPosition.cpy().sub(dragPosition).scl(5);
+            currentBirdBody.setLinearVelocity(releaseVelocity.x, releaseVelocity.y);
+            launched = true;
+            currentBirdBody.setGravityScale(1f);
+            launchTime = TimeUtils.nanoTime();
+            isDragging = false;
         }
-    } else if (isDragging) {
-        Vector2 releaseVelocity = catapultPosition.cpy().sub(dragPosition).scl(5);
-        currentBirdBody.setLinearVelocity(releaseVelocity.x, releaseVelocity.y);
-        currentBirdBody.setActive(true); // Activate the bird body when launched
-        launched = true;
-        currentBirdBody.setGravityScale(1f);
-        launchTime = TimeUtils.nanoTime();
-        isDragging = false;
     }
-}
 
     private void createGround() {
         BodyDef groundDef = new BodyDef();
@@ -326,18 +325,19 @@ public class Level1Screen implements Screen, ContactListener {
         if (isDragging) {
             drawTrajectory();
         }
-
+        checkAbility();
         if (launchTime != -1 && TimeUtils.nanoTime() - launchTime > 10 * 1000000000L) {
             currentBirdBody.setLinearVelocity(0, 0);
             currentBirdBody.setAngularVelocity(0);
             currentBirdBody.setActive(false);
-            currentBird.setVisible(false);
+            currentBird.setColor(1, 1, 1, 0);
             launchTime = -1;
+            launched = false;
             setNextBird();
         }
 
         if (currentBird != null && currentBird.getY() < 0) {
-            currentBird.setVisible(false);
+            currentBird.setColor(1, 1, 1, 0);
             setNextBird();
         }
         checkContact();
@@ -385,17 +385,14 @@ public class Level1Screen implements Screen, ContactListener {
         shapeRenderer.setColor(1, 0, 0, 1);
 
         Vector2 start = new Vector2(currentBirdBody.getPosition().x, currentBirdBody.getPosition().y);
-        Vector2 velocity = catapultPosition.cpy().sub(dragPosition).scl(6);
+        Vector2 velocity = catapultPosition.cpy().sub(dragPosition).scl(5);
 
         float timeStep = 1 / 60f;
         int numSteps = 100;
 
         for (int i = 0; i < numSteps; i++) {
             float t = i * timeStep;
-            Vector2 position = new Vector2(
-                start.x + velocity.x * t,
-                start.y + velocity.y * t + 0.5f * world.getGravity().y * t * t
-            );
+            Vector2 position = new Vector2(start.x + ((velocity.x)) * t, start.y + ((velocity.y)) * t + -10f * t * t / 2);
             shapeRenderer.circle(position.x, position.y, 2);
         }
 
@@ -509,15 +506,12 @@ public class Level1Screen implements Screen, ContactListener {
             if (bodyA.equals(pigBody) || bodyB.equals(pigBody)) {
                 pigHealth -= 50; // Decrease pig health by 50
                 System.out.println("Pig Health: " + pigHealth);
-                if (pigHealth <= 100 && pigHealth > 0) {
-                    pig.setDrawable(new TextureRegionDrawable(new TextureRegion(new Texture("birds_piggies/normal_pig_damaged.png")))); // Change pig image when health is below 100
-                }
                 if (pigHealth <= 0) {
                     pigCount--;
-                    pig.setPosition(-1000, -1000);
-                    pig.setVisible(false);
-                    destroyPigBody = true;
-                    pig.setDrawable(new TextureRegionDrawable(new TextureRegion(new Texture("birds_piggies/empty.png")))); // Change pig image when dead
+                    pig.setPosition(-1000, -1000); // Move pig off-screen
+                    pig.setVisible(false); // Hide pig
+                    destroyPigBody = true; // Set flag to destroy pig body
+                    pig.setDrawable(new TextureRegionDrawable(new TextureRegion(new Texture("birds_piggies/empty.png")))); // Change pig image
                 }
             }
         }
