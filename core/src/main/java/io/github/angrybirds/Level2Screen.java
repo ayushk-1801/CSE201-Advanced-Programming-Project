@@ -52,6 +52,11 @@ public class Level2Screen implements Screen, ContactListener {
     private Body selectedBirdBody;
     private Image selectedBird;
     private float launchTime = -1;
+    private boolean pig1killed;
+    private boolean pig2killed;
+    private boolean pig3killed;
+
+    private boolean hit=true;
 
     private Queue<Image> birdQueue;
     private Image currentBird;
@@ -76,6 +81,9 @@ public class Level2Screen implements Screen, ContactListener {
         world = new World(new Vector2(0, -9.81f), true);
         debugRenderer = new Box2DDebugRenderer(); // Initialize debug renderer
         shapeRenderer = new ShapeRenderer();
+        pig1killed=false;
+        pig2killed=false;
+        pig3killed=false;
         score = 0;
         pigCount = 3; // Adjust pig count for Level 2
         // Registers the Level2 class as the contact listener
@@ -224,6 +232,7 @@ public class Level2Screen implements Screen, ContactListener {
             currentBirdBody = createCircularBody(currentBird, DENSITY, FRICTION, RESTITUTION);
             stage.addActor(currentBird);
         }
+        hit=true;
     }
 
     private Vector2 catapultPosition = new Vector2(300, 150); // Adjust to match your slingshot position
@@ -391,6 +400,19 @@ public class Level2Screen implements Screen, ContactListener {
             setNextBird();
         }
         checkContact();
+        if (!helmetPig.isVisible() && !pig3killed) {
+            Gdx.app.log("Debug", "Helmet pig disappeared. Forcing pig3killed to true.");
+            pig3killed = true;
+        }
+        // Gdx.app.log("Debug", "Helmet pig hits: " + pighits);
+
+        
+        if (pig1killed&&pig2killed&&pig3killed) {
+  
+                ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new VictoryMenu2());
+                  // Reset the flag to allow new contact detection
+            
+        }
         // Check for defeat condition
         if (birdQueue.isEmpty() && pigCount > 0) {
             ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new DefeatMenu2());
@@ -423,44 +445,52 @@ public class Level2Screen implements Screen, ContactListener {
     private void checkContact() {
         if (isContact(currentBirdBody, pig1Body)) {
             handlePigContact(pig1, pig1Body);
+            pig1killed=true;
         }
         if (isContact(currentBirdBody, pig2Body)) {
             handlePigContact(pig2, pig2Body);
+            pig2killed=true;
         }
-        if (isContact(currentBirdBody, helmetPigBody)) {
-            handlePigContact(helmetPig, helmetPigBody);
-        }
+        if (isContact(currentBirdBody, helmetPigBody)&&hit) {
+            Gdx.app.log("Debug", "Contact detected with helmetPigBody.");
+            handleHelmetPigContact(helmetPig, helmetPigBody);
+            
+        } 
+        
         if (isContact(currentBirdBody, woodHorizontalBody)) {
             handleWoodContact(woodHorizontal, woodHorizontalBody);
         }
         if (isContact(currentBirdBody, woodVertical1Body)) {
             handleWoodContact(woodVertical1, woodVertical1Body);
+            handleWoodContact(woodHorizontal, woodHorizontalBody);
         }
         if (isContact(currentBirdBody, woodVertical2Body)) {
             handleWoodContact(woodVertical2, woodVertical2Body);
+            handleWoodContact(woodHorizontal, woodHorizontalBody);
         }
 
         // Check if the number of pigs is zero and 1 second has passed
-        if (pigCount == 0) {
-            // If 1 second has passed since contact, switch to VictoryMenu3
-            if (TimeUtils.nanoTime() - timeOfContact > 1_000_000_000L) { // 1 second in nanoseconds
-                ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new VictoryMenu3());
-                contactDetected = false;  // Reset the flag to allow new contact detection
-            }
-        }
+        // if (pig1killed&&pig2killed&&pig3killed) {
+        //     // If 1 second has passed since contact, switch to VictoryMenu3
+        //    // 1 second in nanoseconds
+        //         ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new VictoryMenu1());
+        //         contactDetected = false;  // Reset the flag to allow new contact detection
+            
+        // }
     }
 
     private boolean isContact(Body bodyA, Body bodyB) {
         return Math.sqrt(Math.pow(bodyA.getPosition().x - bodyB.getPosition().x, 2) + Math.pow(bodyA.getPosition().y - bodyB.getPosition().y, 2)) < 0.8f;
     }
 
-    private void handlePigContact(Image pig, Body pigBody) {
+    private void handlePigContact(Image pigg, Body piggBody) {
         score += 100;
         pigCount--;
-        pigBody.setLinearVelocity(0, 0);
-        pigBody.setAngularVelocity(0);
-        bodiesToDeactivate.add(pigBody);  // Queue the body for deactivation
-        pig.setVisible(false);
+        piggBody.setLinearVelocity(0, 0);
+        piggBody.setAngularVelocity(0);
+        bodiesToDeactivate.add(piggBody);  // Queue the body for deactivation
+        pigg.setVisible(false);
+       
 
         // Reduce bird velocity
         currentBirdBody.setLinearVelocity(
@@ -468,8 +498,40 @@ public class Level2Screen implements Screen, ContactListener {
             currentBirdBody.getLinearVelocity().y
         );
 
-        timeOfContact = TimeUtils.nanoTime();
     }
+    private int pighits=0;
+    private void handleHelmetPigContact(Image pigg, Body piggBody) {
+        if(hit){
+        pighits+=1;
+        Gdx.app.log("Debug", "Helmet pig hit count: " + pighits);
+
+        if(pighits>1){
+        score += 100;
+        pig3killed=true;
+        
+        piggBody.setLinearVelocity(0, 0);
+        piggBody.setAngularVelocity(0);
+         // Queue the body for deactivation
+        pigg.setVisible(false);
+        }
+        else {
+            // Visual feedback for the first hit (optional)
+            Gdx.app.log("Debug", "Helmet pig hit! Remaining hits to kill: " + (2 - pighits));
+        }
+       
+
+        // Reduce bird velocity
+        currentBirdBody.setLinearVelocity(
+            currentBirdBody.getLinearVelocity().x * 0.8f,
+            currentBirdBody.getLinearVelocity().y
+        );
+
+        hit=false;
+    }else {
+        // Visual feedback for the first hit (optional)
+        Gdx.app.log("Debug", "Helmet pig hit! Remaining hits to kill: " + (2 - pighits));
+    }
+}
 
     private void handleWoodContact(Image wood, Body woodBody) {
         score += 100;
