@@ -15,36 +15,40 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
+import java.io.*;
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 public class Level1Screen implements Screen, ContactListener {
-    private SpriteBatch batch;
-    private Texture bgImage;
-    private Stage stage;
-    private GameProgress gameProgress;
-
-    // Box2D physics world
-    private World world;
     private static final float PPM = 100; // Pixels per meter
     private static final float TIME_STEP = 1 / 60f;
     private static final int VELOCITY_ITERATIONS = 6;
     private static final int POSITION_ITERATIONS = 2;
-
+    private final float FRICTION = 100f;
+    private final float DENSITY = 1f;
+    private final float RESTITUTION = 0.2f;
+    public boolean loadGame = false;
+    private SpriteBatch batch;
+    private Texture bgImage;
+    private Stage stage;
+    private GameProgress gameProgress;
+    // Box2D physics world
+    private World world;
     // Physics bodies
     private Body pigBody;
     private Body woodVertical1Body, woodVertical2Body, woodHorizontalBody;
     private Body redBirdBody, chuckBirdBody, bombBirdBody;
     private Body groundBody;
-
     // Images for the fort, pig, and slingshot
     private Image pig;
     private Image woodVertical1, woodVertical2, woodHorizontal;
     private Image slingshot;
     private Image pause;
     private Image skip;
+    private Image save;
     private Image redBird, chuckBird, bombBird;
-
     // Input management for bird launch
     private boolean isDragging;
     private Vector2 initialTouchPosition;
@@ -52,21 +56,182 @@ public class Level1Screen implements Screen, ContactListener {
     private Body selectedBirdBody;
     private Image selectedBird;
     private float launchTime = -1;
-
     private Queue<Image> birdQueue;
     private Image currentBird;
     private Body currentBirdBody;
-
     private int score;
     private int pigCount;
     private boolean contactDetected;
     private long timeOfContact = -1;
-    private final float FRICTION = 100f;
-    private final float DENSITY = 1f;
-    private final float RESTITUTION = 0.2f;
-    private boolean launched=false;
+    private boolean launched = false;
     private Box2DDebugRenderer debugRenderer;
     private ShapeRenderer shapeRenderer;
+    private Vector2 catapultPosition = new Vector2(300, 150); // Adjust to match your slingshot position
+    private float catapultRadius = 100f; // Area around the slingshot where dragging is allowed
+
+    public Level1Screen() {
+    }
+    public Level1Screen(boolean loadGame) {
+        this.loadGame = loadGame;
+    }
+
+    public void saveGameState() {
+        System.out.println("Saving game state...");
+        GameState gameState = new GameState();
+        gameState.score = score;
+        gameState.pigCount = pigCount;
+        gameState.contactDetected = contactDetected;
+        gameState.timeOfContact = timeOfContact;
+
+        gameState.birds = new ArrayList<>();
+        for (Image bird : birdQueue) {
+            GameState.BirdState birdState = new GameState.BirdState();
+            birdState.type = bird.getName();
+            birdState.x = bird.getX();
+            birdState.y = bird.getY();
+            gameState.birds.add(birdState);
+        }
+
+        gameState.bodies = new ArrayList<>();
+        addBodyState(gameState.bodies, pig, pigBody, "pig");
+        addBodyState(gameState.bodies, woodVertical1, woodVertical1Body, "woodVertical1");
+        addBodyState(gameState.bodies, woodVertical2, woodVertical2Body, "woodVertical2");
+        addBodyState(gameState.bodies, woodHorizontal, woodHorizontalBody, "woodHorizontal");
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("storage/lvl1.txt"))) {
+            writer.write("HI");
+            writer.write(gameState.score + "\n");
+            writer.write(gameState.pigCount + "\n");
+            writer.write(gameState.contactDetected + "\n");
+            writer.write(gameState.timeOfContact + "\n");
+
+            for (GameState.BirdState bird : gameState.birds) {
+                writer.write(bird.type + "," + bird.x + "," + bird.y + "\n");
+            }
+
+            for (GameState.BodyState body : gameState.bodies) {
+                writer.write(body.type + "," + body.x + "," + body.y + "," + body.active + "\n");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void addBodyState(List<GameState.BodyState> bodies, Image image, Body body, String type) {
+        GameState.BodyState bodyState = new GameState.BodyState();
+        bodyState.type = type;
+        bodyState.x = body.getPosition().x;
+        bodyState.y = body.getPosition().y;
+        bodyState.active = body.isActive();
+        bodies.add(bodyState);
+    }
+
+    public void loadGameState() {
+        try (BufferedReader reader = new BufferedReader(new FileReader("storage/lvl1.txt"))) {
+            GameState gameState = new GameState();
+            gameState.score = Integer.parseInt(reader.readLine());
+            gameState.pigCount = Integer.parseInt(reader.readLine());
+            gameState.contactDetected = Boolean.parseBoolean(reader.readLine());
+            gameState.timeOfContact = Long.parseLong(reader.readLine());
+
+            gameState.birds = new ArrayList<>();
+            String line;
+            while ((line = reader.readLine()) != null && line.contains(",")) {
+                String[] parts = line.split(",");
+                if (parts.length == 3) {
+                    GameState.BirdState birdState = new GameState.BirdState();
+                    birdState.type = parts[0];
+                    birdState.x = Float.parseFloat(parts[1]);
+                    birdState.y = Float.parseFloat(parts[2]);
+                    gameState.birds.add(birdState);
+                } else if (parts.length == 4) {
+                    GameState.BodyState bodyState = new GameState.BodyState();
+                    bodyState.type = parts[0];
+                    bodyState.x = Float.parseFloat(parts[1]);
+                    bodyState.y = Float.parseFloat(parts[2]);
+                    bodyState.active = Boolean.parseBoolean(parts[3]);
+                    gameState.bodies.add(bodyState);
+                }
+            }
+
+            score = gameState.score;
+            pigCount = gameState.pigCount;
+            contactDetected = gameState.contactDetected;
+            timeOfContact = gameState.timeOfContact;
+
+            birdQueue.clear();
+            for (GameState.BirdState birdState : gameState.birds) {
+                Image bird = createBird(birdState.type);
+                bird.setPosition(birdState.x, birdState.y);
+                Body body = getBodyForImage(bird);
+                birdQueue.add(bird);
+            }
+
+            for (GameState.BodyState bodyState : gameState.bodies) {
+                Image image = getImageForType(bodyState.type);
+                Body body = getBodyForImage(image);
+                body.setTransform(bodyState.x, bodyState.y, 0);
+                body.setActive(bodyState.active);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private Image createBird(String type) {
+        Texture birdTexture;
+        switch (type) {
+            case "red":
+                birdTexture = new Texture("birds_piggies/red.png");
+                break;
+            case "chuck":
+                birdTexture = new Texture("birds_piggies/chuck.png");
+                break;
+            case "bomb":
+                birdTexture = new Texture("birds_piggies/bomb.png");
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown bird type: " + type);
+        }
+        Image bird = new Image(birdTexture);
+        bird.setSize(birdTexture.getWidth() / 5, birdTexture.getHeight() / 5);
+        return bird;
+    }
+
+    private Image getImageForType(String type) {
+        switch (type) {
+            case "pig":
+                return pig;
+            case "woodVertical1":
+                return woodVertical1;
+            case "woodVertical2":
+                return woodVertical2;
+            case "woodHorizontal":
+                return woodHorizontal;
+            default:
+                throw new IllegalArgumentException("Unknown type: " + type);
+        }
+    }
+
+    private Body getBodyForImage(Image image) {
+        if (image == pig) {
+            return pigBody;
+        } else if (image == woodVertical1) {
+            return woodVertical1Body;
+        } else if (image == woodVertical2) {
+            return woodVertical2Body;
+        } else if (image == woodHorizontal) {
+            return woodHorizontalBody;
+        } else if (image == redBird) {
+            return redBirdBody;
+        } else if (image == chuckBird) {
+            return chuckBirdBody;
+        } else if (image == bombBird) {
+            return bombBirdBody;
+        } else {
+            throw new IllegalArgumentException("Unknown image: " + image);
+        }
+    }
 
     @Override
     public void show() {
@@ -99,6 +264,7 @@ public class Level1Screen implements Screen, ContactListener {
         Texture redBirdTexture = new Texture("birds_piggies/red.png");
         Texture chuckBirdTexture = new Texture("birds_piggies/chuck.png");
         Texture bombBirdTexture = new Texture("birds_piggies/bomb.png");
+        Texture saveTexture = new Texture("buttons/save.png");
 
         // Create the pig and position it inside the fort
         pig = new Image(pigTexture);
@@ -167,6 +333,19 @@ public class Level1Screen implements Screen, ContactListener {
             }
         });
 
+        // Create the save button
+        save = new Image(saveTexture);
+        save.setPosition(Gdx.graphics.getWidth() - save.getWidth() - 20, 900);
+        save.setSize(100, 100);
+        save.setScaling(com.badlogic.gdx.utils.Scaling.fit);
+        save.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                saveGameState();
+                System.out.println("Game saved!");
+            }
+        });
+
         birdQueue = new LinkedList<>();
         birdQueue.add(redBird);
         birdQueue.add(chuckBird);
@@ -182,8 +361,13 @@ public class Level1Screen implements Screen, ContactListener {
         stage.addActor(pig);
         stage.addActor(pause);
         stage.addActor(skip);
+        stage.addActor(save);
         stage.addActor(currentBird);
         stage.addActor(redBird);
+
+        if (loadGame) {
+            loadGameState();
+        }
     }
 
     private void setNextBird() {
@@ -194,9 +378,6 @@ public class Level1Screen implements Screen, ContactListener {
             stage.addActor(currentBird);
         }
     }
-
-    private Vector2 catapultPosition = new Vector2(300, 150); // Adjust to match your slingshot position
-    private float catapultRadius = 100f; // Area around the slingshot where dragging is allowed
 
     private void handleInput() {
         Vector2 touchPos = new Vector2(Gdx.input.getX(), Gdx.input.getY());
@@ -238,7 +419,7 @@ public class Level1Screen implements Screen, ContactListener {
             // Calculate launch velocity
             Vector2 releaseVelocity = catapultPosition.cpy().sub(dragPosition).scl(5 / PPM);
             currentBirdBody.setLinearVelocity(releaseVelocity.x + 5, releaseVelocity.y + 10); // Adjust scaling for desired trajectory
-            launched=true;
+            launched = true;
             // Ensure bird is affected by gravity
             currentBirdBody.setGravityScale(1f);
             launchTime = TimeUtils.nanoTime();
@@ -277,7 +458,7 @@ public class Level1Screen implements Screen, ContactListener {
         Body body = world.createBody(bodyDef);
 
         CircleShape circle = new CircleShape();
-        circle.setRadius(image.getWidth() / 3/ PPM);
+        circle.setRadius(image.getWidth() / 3 / PPM);
 
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = circle;
@@ -354,7 +535,7 @@ public class Level1Screen implements Screen, ContactListener {
             currentBirdBody.setActive(false);         // Deactivate the physics body so it no longer interacts with the world
             currentBird.setVisible(false);
             launchTime = -1;
-            launched=false;
+            launched = false;
             setNextBird();
         }
 
@@ -408,7 +589,7 @@ public class Level1Screen implements Screen, ContactListener {
 
         for (int i = 0; i < numSteps; i++) {
             float t = i * timeStep;
-            Vector2 position = new Vector2(start.x + ((velocity.x)+5 )* t , start.y + ((velocity.y)+10) * t + -10f  * t * t/2);
+            Vector2 position = new Vector2(start.x + ((velocity.x) + 5) * t, start.y + ((velocity.y) + 10) * t + -10f * t * t / 2);
             shapeRenderer.circle(position.x * PPM, position.y * PPM, 2);
         }
 
@@ -418,7 +599,7 @@ public class Level1Screen implements Screen, ContactListener {
 
     public void checkContact() {
         // Calculate distance between bird and pig
-        if (Math.sqrt(Math.pow(currentBirdBody.getPosition().x - pigBody.getPosition().x, 2) + Math.pow(currentBirdBody.getPosition().y - pigBody.getPosition().y, 2)) < 0.8f&&currentBirdBody.getLinearVelocity().x>1f) {
+        if (Math.sqrt(Math.pow(currentBirdBody.getPosition().x - pigBody.getPosition().x, 2) + Math.pow(currentBirdBody.getPosition().y - pigBody.getPosition().y, 2)) < 0.8f && currentBirdBody.getLinearVelocity().x > 1f) {
 
             // Only handle the first contact
             if (!contactDetected) {
@@ -451,7 +632,7 @@ public class Level1Screen implements Screen, ContactListener {
             woodHorizontal.remove();
             // Reduce bird velocity
             currentBirdBody.setLinearVelocity(
-                currentBirdBody.getLinearVelocity().x ,
+                currentBirdBody.getLinearVelocity().x,
                 currentBirdBody.getLinearVelocity().y
             );
         }

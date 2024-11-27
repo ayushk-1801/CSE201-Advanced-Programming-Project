@@ -21,6 +21,7 @@ public class MenuScreen implements Screen {
     private Image logo;
     private Image startButton;
     private Image exitButton;
+    private Image loadButton;
 
     @Override
     public void show() {
@@ -43,7 +44,7 @@ public class MenuScreen implements Screen {
         startButton = new Image(startTexture);
         startButton.setSize(400, 400);
         startButton.setScaling(Scaling.fit);
-        startButton.setPosition(Gdx.graphics.getWidth() / 2f - startButton.getWidth() / 2, 400);
+        startButton.setPosition(Gdx.graphics.getWidth() / 2f - startButton.getWidth() / 2 - 300, 400);
         startButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -51,6 +52,17 @@ public class MenuScreen implements Screen {
             }
         });
 
+        Texture loadTexture = new Texture("buttons/load.png");
+        loadButton = new Image(loadTexture);
+        loadButton.setSize(200, 200);
+        loadButton.setScaling(Scaling.fit);
+        loadButton.setPosition(Gdx.graphics.getWidth() / 2f - loadButton.getWidth() / 2 + 300, 500);
+        loadButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new LoadLevelScreen());
+            }
+        });
 
         Texture exitTexture = new Texture("buttons/exit.png");
         exitButton = new Image(exitTexture);
@@ -65,6 +77,7 @@ public class MenuScreen implements Screen {
         stage.addActor(logo);
         stage.addActor(startButton);
         stage.addActor(exitButton);
+        stage.addActor(loadButton);
     }
 
     @Override
