@@ -148,6 +148,7 @@ public class Level1Screen implements Screen, ContactListener {
             for (int i = birdQueue.size(); i > gameState.birdCount; i--) {
                 birdQueue.poll();
             }
+            setNextBird();
             for (GameState.BodyState bodyState : gameState.bodies) {
                 if (!bodyState.dead) {
                     Image image = getImageForType(bodyState.type);
