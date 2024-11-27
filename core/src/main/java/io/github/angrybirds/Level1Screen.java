@@ -71,6 +71,7 @@ public class Level1Screen implements Screen, ContactListener {
 
     public Level1Screen() {
     }
+
     public Level1Screen(boolean loadGame) {
         this.loadGame = loadGame;
     }
@@ -82,35 +83,23 @@ public class Level1Screen implements Screen, ContactListener {
         gameState.pigCount = pigCount;
         gameState.contactDetected = contactDetected;
         gameState.timeOfContact = timeOfContact;
+        gameState.birdCount = birdQueue.size(); // Store the number of birds left
 
-        gameState.birds = new ArrayList<>();
-        for (Image bird : birdQueue) {
-            GameState.BirdState birdState = new GameState.BirdState();
-            birdState.type = bird.getName();
-            birdState.x = bird.getX();
-            birdState.y = bird.getY();
-            gameState.birds.add(birdState);
-        }
-
-        gameState.bodies = new ArrayList<>();
+        gameState.bodies = new ArrayList<>(); // Initialize the bodies list
         addBodyState(gameState.bodies, pig, pigBody, "pig");
         addBodyState(gameState.bodies, woodVertical1, woodVertical1Body, "woodVertical1");
         addBodyState(gameState.bodies, woodVertical2, woodVertical2Body, "woodVertical2");
         addBodyState(gameState.bodies, woodHorizontal, woodHorizontalBody, "woodHorizontal");
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter("storage/lvl1.txt"))) {
-            writer.write("HI");
             writer.write(gameState.score + "\n");
             writer.write(gameState.pigCount + "\n");
             writer.write(gameState.contactDetected + "\n");
             writer.write(gameState.timeOfContact + "\n");
-
-            for (GameState.BirdState bird : gameState.birds) {
-                writer.write(bird.type + "," + bird.x + "," + bird.y + "\n");
-            }
+            writer.write(gameState.birdCount + "\n"); // Write the bird count
 
             for (GameState.BodyState body : gameState.bodies) {
-                writer.write(body.type + "," + body.x + "," + body.y + "," + body.active + "\n");
+                writer.write(body.type + "," + body.x + "," + body.y + "," + body.active + "," + body.dead + "\n");
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -123,6 +112,7 @@ public class Level1Screen implements Screen, ContactListener {
         bodyState.x = body.getPosition().x;
         bodyState.y = body.getPosition().y;
         bodyState.active = body.isActive();
+        bodyState.dead = !stage.getActors().contains(image, true); // Mark as dead if removed from the stage
         bodies.add(bodyState);
     }
 
@@ -133,23 +123,19 @@ public class Level1Screen implements Screen, ContactListener {
             gameState.pigCount = Integer.parseInt(reader.readLine());
             gameState.contactDetected = Boolean.parseBoolean(reader.readLine());
             gameState.timeOfContact = Long.parseLong(reader.readLine());
+            gameState.birdCount = Integer.parseInt(reader.readLine()); // Read the bird count
 
-            gameState.birds = new ArrayList<>();
+            gameState.bodies = new ArrayList<>();
             String line;
             while ((line = reader.readLine()) != null && line.contains(",")) {
                 String[] parts = line.split(",");
-                if (parts.length == 3) {
-                    GameState.BirdState birdState = new GameState.BirdState();
-                    birdState.type = parts[0];
-                    birdState.x = Float.parseFloat(parts[1]);
-                    birdState.y = Float.parseFloat(parts[2]);
-                    gameState.birds.add(birdState);
-                } else if (parts.length == 4) {
+                if (parts.length == 5) {
                     GameState.BodyState bodyState = new GameState.BodyState();
                     bodyState.type = parts[0];
                     bodyState.x = Float.parseFloat(parts[1]);
                     bodyState.y = Float.parseFloat(parts[2]);
                     bodyState.active = Boolean.parseBoolean(parts[3]);
+                    bodyState.dead = Boolean.parseBoolean(parts[4]);
                     gameState.bodies.add(bodyState);
                 }
             }
@@ -159,19 +145,19 @@ public class Level1Screen implements Screen, ContactListener {
             contactDetected = gameState.contactDetected;
             timeOfContact = gameState.timeOfContact;
 
-            birdQueue.clear();
-            for (GameState.BirdState birdState : gameState.birds) {
-                Image bird = createBird(birdState.type);
-                bird.setPosition(birdState.x, birdState.y);
-                Body body = getBodyForImage(bird);
-                birdQueue.add(bird);
+            for (int i = birdQueue.size(); i > gameState.birdCount; i--) {
+                birdQueue.poll();
             }
-
             for (GameState.BodyState bodyState : gameState.bodies) {
-                Image image = getImageForType(bodyState.type);
-                Body body = getBodyForImage(image);
-                body.setTransform(bodyState.x, bodyState.y, 0);
-                body.setActive(bodyState.active);
+                if (!bodyState.dead) {
+                    Image image = getImageForType(bodyState.type);
+                    Body body = getBodyForImage(image);
+                    body.setTransform(bodyState.x, bodyState.y, 0);
+                    body.setActive(bodyState.active);
+                    stage.addActor(image); // Ensure the image is added back to the stage
+                } else{
+                    stage.getActors().removeValue(getImageForType(bodyState.type), true);
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -307,9 +293,9 @@ public class Level1Screen implements Screen, ContactListener {
         bombBird.setPosition(120, slingshot.getY());
         bombBird.setSize(redBird.getWidth(), redBird.getHeight());
 
-        redBirdBody = createCircularBody(redBird, DENSITY, FRICTION, 0.8f); // Higher restitution for bounce
-        chuckBirdBody = createCircularBody(chuckBird, DENSITY, FRICTION, 0.8f);
-        bombBirdBody = createCircularBody(bombBird, DENSITY, FRICTION, 0.8f);
+//        redBirdBody = createCircularBody(redBird, DENSITY, FRICTION, 0.8f); // Higher restitution for bounce
+//        chuckBirdBody = createCircularBody(chuckBird, DENSITY, FRICTION, 0.8f);
+//        bombBirdBody = createCircularBody(bombBird, DENSITY, FRICTION, 0.8f);
 
         // Create the pause button
         pause = new Image(pauseTexture);
@@ -578,7 +564,7 @@ public class Level1Screen implements Screen, ContactListener {
 
     private void drawTrajectory() {
         shapeRenderer.setProjectionMatrix(stage.getCamera().combined);
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
         shapeRenderer.setColor(1, 0, 0, 1); // White color
 
         Vector2 start = new Vector2(currentBirdBody.getPosition().x, currentBirdBody.getPosition().y);
