@@ -11,6 +11,10 @@ dependencies {
   api "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
   api "com.badlogicgames.gdx:gdx:$gdxVersion"
 
+  implementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
+  testImplementation 'junit:junit:4.12'
+  implementation 'junit:junit:4.12'
+
   if(enableGraalNative == 'true') {
     implementation "io.github.berstanio:gdx-svmhelper-annotations:$graalHelperVersion"
   }
