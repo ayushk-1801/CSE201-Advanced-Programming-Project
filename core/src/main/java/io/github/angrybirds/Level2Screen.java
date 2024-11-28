@@ -46,6 +46,7 @@ public class Level2Screen implements Screen, ContactListener {
     private Image slingshot;
     private Image pause;
     private Image skip;
+    private Image save;
     private Image redBird, chuckBird, bombBird, chuckBird1, chuckBird2;
     // Input management for bird launch
     private boolean isDragging;
@@ -76,6 +77,7 @@ public class Level2Screen implements Screen, ContactListener {
 
     public Level2Screen() {
     }
+
     public Level2Screen(boolean load) {
         this.load = load;
     }
@@ -90,19 +92,19 @@ public class Level2Screen implements Screen, ContactListener {
         gameState.birdCount = birdQueue.size(); // Store the number of birds left
 
         gameState.bodies = new ArrayList<>(); // Initialize the bodies list
-        addBodyState(gameState.bodies, pig1, pig1Body, "pig1");
-        addBodyState(gameState.bodies, pig2, pig2Body, "pig2");
-        addBodyState(gameState.bodies, helmetPig, helmetPigBody, "helmetPig");
-        addBodyState(gameState.bodies, woodVertical1, woodVertical1Body, "woodVertical1");
-        addBodyState(gameState.bodies, woodVertical2, woodVertical2Body, "woodVertical2");
-        addBodyState(gameState.bodies, woodHorizontal, woodHorizontalBody, "woodHorizontal");
+        addBodyState(gameState.bodies, pig1, pig1Body, "pig1", "pig1");
+        addBodyState(gameState.bodies, pig2, pig2Body, "pig2", "pig2");
+        addBodyState(gameState.bodies, helmetPig, helmetPigBody, "helmetPig", "pig3");
+        addBodyState(gameState.bodies, woodVertical1, woodVertical1Body, "woodVertical1", "block");
+        addBodyState(gameState.bodies, woodVertical2, woodVertical2Body, "woodVertical2", "block");
+        addBodyState(gameState.bodies, woodHorizontal, woodHorizontalBody, "woodHorizontal", "block");
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter("storage/lvl2.txt"))) {
             writer.write(gameState.score + "\n");
             writer.write(gameState.pigCount + "\n");
             writer.write(gameState.contactDetected + "\n");
             writer.write(gameState.timeOfContact + "\n");
-            writer.write(gameState.birdCount + "\n"); // Write the bird count
+            writer.write(gameState.birdCount + "\n");
 
             for (GameState.BodyState body : gameState.bodies) {
                 writer.write(body.type + "," + body.x + "," + body.y + "," + body.active + "," + body.dead + "\n");
@@ -112,16 +114,6 @@ public class Level2Screen implements Screen, ContactListener {
         }
     }
 
-    private void addBodyState(List<GameState.BodyState> bodies, Image image, Body body, String type) {
-        GameState.BodyState bodyState = new GameState.BodyState();
-        bodyState.type = type;
-        bodyState.x = body.getPosition().x;
-        bodyState.y = body.getPosition().y;
-        bodyState.active = body.isActive();
-        bodyState.dead = !stage.getActors().contains(image, true); // Mark as dead if removed from the stage
-        bodies.add(bodyState);
-    }
-
     public void loadGameState() {
         try (BufferedReader reader = new BufferedReader(new FileReader("storage/lvl2.txt"))) {
             GameState gameState = new GameState();
@@ -129,7 +121,7 @@ public class Level2Screen implements Screen, ContactListener {
             gameState.pigCount = Integer.parseInt(reader.readLine());
             gameState.contactDetected = Boolean.parseBoolean(reader.readLine());
             gameState.timeOfContact = Long.parseLong(reader.readLine());
-            gameState.birdCount = Integer.parseInt(reader.readLine()); // Read the bird count
+            gameState.birdCount = Integer.parseInt(reader.readLine());
 
             gameState.bodies = new ArrayList<>();
             String line;
@@ -150,7 +142,6 @@ public class Level2Screen implements Screen, ContactListener {
             pigCount = gameState.pigCount;
             contactDetected = gameState.contactDetected;
             timeOfContact = gameState.timeOfContact;
-
             for (int i = birdQueue.size(); i > gameState.birdCount; i--) {
                 birdQueue.poll();
             }
@@ -160,14 +151,30 @@ public class Level2Screen implements Screen, ContactListener {
                     Body body = getBodyForImage(image);
                     body.setTransform(bodyState.x, bodyState.y, 0);
                     body.setActive(bodyState.active);
-                    stage.addActor(image);
-                } else {
-                    stage.getActors().removeValue(getImageForType(bodyState.type), true);
+                    stage.addActor(image); // Ensure the image is added back to the stage
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void addBodyState(List<GameState.BodyState> bodies, Image image, Body body, String type, String category) {
+        GameState.BodyState bodyState = new GameState.BodyState();
+        bodyState.type = type;
+        bodyState.x = body.getPosition().x;
+        bodyState.y = body.getPosition().y;
+        bodyState.active = body.isActive();
+        if (category.equals("pig1")) {
+            bodyState.dead = pig1killed;
+        } else if (category.equals("pig2")) {
+            bodyState.dead = pig2killed;
+        } else if (category.equals("pig3")) {
+            bodyState.dead = pig3killed;
+        } else {
+            bodyState.dead = !stage.getActors().contains(image, true);
+        }
+        bodies.add(bodyState);
     }
 
     private Image getImageForType(String type) {
@@ -247,6 +254,7 @@ public class Level2Screen implements Screen, ContactListener {
         Texture woodHorizontalTexture = new Texture("materials/horizontal_wood.png");
         Texture slingshotTexture = new Texture("birds_piggies/slingshot.png");
         Texture skipTexture = new Texture("buttons/skip.png");
+        Texture saveTexture = new Texture("buttons/save.png");
         Texture pauseTexture = new Texture("buttons/pause.png");
         Texture redBirdTexture = new Texture("birds_piggies/red.png");
         Texture chuckBirdTexture = new Texture("birds_piggies/chuck.png");
@@ -341,6 +349,18 @@ public class Level2Screen implements Screen, ContactListener {
             }
         });
 
+        save = new Image(saveTexture);
+        save.setPosition(Gdx.graphics.getWidth() - save.getWidth() - 20, 970);
+        save.setSize(100, 100);
+        save.setScaling(com.badlogic.gdx.utils.Scaling.fit);
+        save.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                saveGameState();
+                System.out.println("Game saved!");
+            }
+        });
+
         birdQueue = new LinkedList<>();
         birdQueue.add(redBird);
         birdQueue.add(chuckBird);
@@ -360,6 +380,7 @@ public class Level2Screen implements Screen, ContactListener {
         stage.addActor(pig2);
         stage.addActor(pause);
         stage.addActor(skip);
+        stage.addActor(save);
         stage.addActor(currentBird);
 
         // Load the game state

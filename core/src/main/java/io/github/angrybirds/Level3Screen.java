@@ -49,6 +49,7 @@ public class Level3Screen implements Screen, ContactListener {
     private Image slingshot;
     private Image pause;
     private Image skip;
+    private Image save;
     private Image redBird, chuckBird, bombBird, redBird1, redBird2;
     // Input management for bird launch
     private boolean isDragging;
@@ -253,6 +254,7 @@ public class Level3Screen implements Screen, ContactListener {
         Texture redBirdTexture = new Texture("birds_piggies/red.png");
         Texture chuckBirdTexture = new Texture("birds_piggies/chuck.png");
         Texture bombBirdTexture = new Texture("birds_piggies/bomb.png");
+        Texture saveTexture = new Texture("buttons/save.png");
 
         // Create the pigs and position them inside the fort
         pig1 = new Image(pigTexture);
@@ -365,6 +367,18 @@ public class Level3Screen implements Screen, ContactListener {
             }
         });
 
+        save = new Image(saveTexture);
+        save.setPosition(Gdx.graphics.getWidth() - save.getWidth() - 20, 970);
+        save.setSize(100, 100);
+        save.setScaling(com.badlogic.gdx.utils.Scaling.fit);
+        save.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                saveGameState();
+                System.out.println("Game saved!");
+            }
+        });
+
         birdQueue = new LinkedList<>();
         birdQueue.add(redBird);
         birdQueue.add(chuckBird);
@@ -386,6 +400,7 @@ public class Level3Screen implements Screen, ContactListener {
 //        stage.addActor(gunPig);
         stage.addActor(pause);
         stage.addActor(skip);
+        stage.addActor(save);
         stage.addActor(currentBird);
     }
 
