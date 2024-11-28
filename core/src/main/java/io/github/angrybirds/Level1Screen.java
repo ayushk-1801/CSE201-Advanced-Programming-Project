@@ -20,8 +20,10 @@ import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
-import java.awt.*;
+import java.io.*;
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 public class Level1Screen implements Screen, ContactListener {
@@ -88,148 +90,158 @@ public class Level1Screen implements Screen, ContactListener {
         this.loadGame = loadGame;
     }
 
-//    public void saveGameState() {
-//        System.out.println("Saving game state...");
-//        GameState gameState = new GameState();
-//        gameState.score = score;
-//        gameState.pigCount = pigCount;
-//        gameState.contactDetected = contactDetected;
-//        gameState.timeOfContact = timeOfContact;
-//        gameState.birdCount = birdQueue.size(); // Store the number of birds left
-//
-//        gameState.bodies = new ArrayList<>(); // Initialize the bodies list
-//        addBodyState(gameState.bodies, pig, pigBody, "pig");
-//        addBodyState(gameState.bodies, woodVertical1, woodVertical1Body, "woodVertical1");
-//        addBodyState(gameState.bodies, woodVertical2, woodVertical2Body, "woodVertical2");
-//        addBodyState(gameState.bodies, woodHorizontal, woodHorizontalBody, "woodHorizontal");
-//
-//        try (BufferedWriter writer = new BufferedWriter(new FileWriter("storage/lvl1.txt"))) {
-//            writer.write(gameState.score + "\n");
-//            writer.write(gameState.pigCount + "\n");
-//            writer.write(gameState.contactDetected + "\n");
-//            writer.write(gameState.timeOfContact + "\n");
-//            writer.write(gameState.birdCount + "\n"); // Write the bird count
-//
-//            for (GameState.BodyState body : gameState.bodies) {
-//                writer.write(body.type + "," + body.x + "," + body.y + "," + body.active + "," + body.dead + "\n");
-//            }
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//    }
-//
-//    private void addBodyState(List<GameState.BodyState> bodies, Image image, Body body, String type) {
-//        GameState.BodyState bodyState = new GameState.BodyState();
-//        bodyState.type = type;
-//        bodyState.x = body.getPosition().x;
-//        bodyState.y = body.getPosition().y;
-//        bodyState.active = body.isActive();
-//        bodyState.dead = !stage.getActors().contains(image, true); // Mark as dead if removed from the stage
-//        bodies.add(bodyState);
-//    }
-//
-//    public void loadGameState() {
-//        try (BufferedReader reader = new BufferedReader(new FileReader("storage/lvl1.txt"))) {
-//            GameState gameState = new GameState();
-//            gameState.score = Integer.parseInt(reader.readLine());
-//            gameState.pigCount = Integer.parseInt(reader.readLine());
-//            gameState.contactDetected = Boolean.parseBoolean(reader.readLine());
-//            gameState.timeOfContact = Long.parseLong(reader.readLine());
-//            gameState.birdCount = Integer.parseInt(reader.readLine()); // Read the bird count
-//
-//            gameState.bodies = new ArrayList<>();
-//            String line;
-//            while ((line = reader.readLine()) != null && line.contains(",")) {
-//                String[] parts = line.split(",");
-//                if (parts.length == 5) {
-//                    GameState.BodyState bodyState = new GameState.BodyState();
-//                    bodyState.type = parts[0];
-//                    bodyState.x = Float.parseFloat(parts[1]);
-//                    bodyState.y = Float.parseFloat(parts[2]);
-//                    bodyState.active = Boolean.parseBoolean(parts[3]);
-//                    bodyState.dead = Boolean.parseBoolean(parts[4]);
-//                    gameState.bodies.add(bodyState);
-//                }
-//            }
-//
-//            score = gameState.score;
-//            pigCount = gameState.pigCount;
-//            contactDetected = gameState.contactDetected;
-//            timeOfContact = gameState.timeOfContact;
-//
-//            for (int i = birdQueue.size(); i > gameState.birdCount; i--) {
-//                birdQueue.poll();
-//            }
-//            for (GameState.BodyState bodyState : gameState.bodies) {
-//                if (!bodyState.dead) {
-//                    Image image = getImageForType(bodyState.type);
-//                    Body body = getBodyForImage(image);
-//                    body.setTransform(bodyState.x, bodyState.y, 0);
-//                    body.setActive(bodyState.active);
-//                    stage.addActor(image); // Ensure the image is added back to the stage
-//                } else {
-//                    stage.getActors().removeValue(getImageForType(bodyState.type), true);
-//                }
-//            }
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//    }
-//
-//    private Image createBird(String type) {
-//        Texture birdTexture;
-//        switch (type) {
-//            case "red":
-//                birdTexture = new Texture("birds_piggies/red.png");
-//                break;
-//            case "chuck":
-//                birdTexture = new Texture("birds_piggies/chuck.png");
-//                break;
-//            case "bomb":
-//                birdTexture = new Texture("birds_piggies/bomb.png");
-//                break;
-//            default:
-//                throw new IllegalArgumentException("Unknown bird type: " + type);
-//        }
-//        Image bird = new Image(birdTexture);
-//        bird.setSize(birdTexture.getWidth() / 5, birdTexture.getHeight() / 5);
-//        return bird;
-//    }
-//
-//    private Image getImageForType(String type) {
-//        switch (type) {
-//            case "pig":
-//                return pig;
-//            case "woodVertical1":
-//                return woodVertical1;
-//            case "woodVertical2":
-//                return woodVertical2;
-//            case "woodHorizontal":
-//                return woodHorizontal;
-//            default:
-//                throw new IllegalArgumentException("Unknown type: " + type);
-//        }
-//    }
-//
-//    private Body getBodyForImage(Image image) {
-//        if (image == pig) {
-//            return pigBody;
-//        } else if (image == woodVertical1) {
-//            return woodVertical1Body;
-//        } else if (image == woodVertical2) {
-//            return woodVertical2Body;
-//        } else if (image == woodHorizontal) {
-//            return woodHorizontalBody;
-//        } else if (image == redBird) {
-//            return redBirdBody;
-//        } else if (image == chuckBird) {
-//            return chuckBirdBody;
-//        } else if (image == bombBird) {
-//            return bombBirdBody;
-//        } else {
-//            throw new IllegalArgumentException("Unknown image: " + image);
-//        }
-//    }
+    public void saveGameState() {
+        System.out.println("Saving game state...");
+        GameState gameState = new GameState();
+        gameState.score = score;
+        gameState.pigCount = pigCount;
+        gameState.contactDetected = contactDetected;
+        gameState.timeOfContact = timeOfContact;
+        gameState.birdCount = birdQueue.size(); // Store the number of birds left
+
+        gameState.bodies = new ArrayList<>(); // Initialize the bodies list
+        addBodyState(gameState.bodies, pig, pigBody, "pig");
+        addBodyState(gameState.bodies, woodVertical1, woodVertical1Body, "woodVertical1");
+        addBodyState(gameState.bodies, woodVertical2, woodVertical2Body, "woodVertical2");
+        addBodyState(gameState.bodies, woodHorizontal, woodHorizontalBody, "woodHorizontal");
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("storage/lvl1.txt"))) {
+            writer.write(gameState.score + "\n");
+            writer.write(gameState.pigCount + "\n");
+            writer.write(gameState.contactDetected + "\n");
+            writer.write(gameState.timeOfContact + "\n");
+            writer.write(gameState.birdCount + "\n"); // Write the bird count
+
+            for (GameState.BodyState body : gameState.bodies) {
+                writer.write(body.type + "," + body.x + "," + body.y + "," + body.active + "," + body.dead + "\n");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void loadGameState() {
+    try (BufferedReader reader = new BufferedReader(new FileReader("storage/lvl1.txt"))) {
+        GameState gameState = new GameState();
+        gameState.score = Integer.parseInt(reader.readLine());
+        gameState.pigCount = Integer.parseInt(reader.readLine());
+        gameState.contactDetected = Boolean.parseBoolean(reader.readLine());
+        gameState.timeOfContact = Long.parseLong(reader.readLine());
+        gameState.birdCount = Integer.parseInt(reader.readLine()); // Read the bird count
+
+        gameState.bodies = new ArrayList<>();
+        String line;
+        while ((line = reader.readLine()) != null && line.contains(",")) {
+            String[] parts = line.split(",");
+            if (parts.length == 5) {
+                GameState.BodyState bodyState = new GameState.BodyState();
+                bodyState.type = parts[0];
+                bodyState.x = Float.parseFloat(parts[1]);
+                bodyState.y = Float.parseFloat(parts[2]);
+                bodyState.active = Boolean.parseBoolean(parts[3]);
+                bodyState.dead = Boolean.parseBoolean(parts[4]);
+                gameState.bodies.add(bodyState);
+            }
+        }
+
+        score = gameState.score;
+        pigCount = gameState.pigCount;
+        contactDetected = gameState.contactDetected;
+        timeOfContact = gameState.timeOfContact;
+
+        for (int i = birdQueue.size(); i > gameState.birdCount; i--) {
+            birdQueue.poll();
+        }
+        for (GameState.BodyState bodyState : gameState.bodies) {
+            Image image = getImageForType(bodyState.type);
+            if (!bodyState.dead) {
+                Body body = getBodyForImage(image);
+                body.setTransform(bodyState.x, bodyState.y, 0);
+                body.setActive(bodyState.active);
+                if (!stage.getActors().contains(image, true)) {
+                    stage.addActor(image); // Ensure the image is added back to the stage only if not already present
+                }
+            } else {
+                stage.getActors().removeValue(image, true); // Remove the image from the stage if it is dead
+            }
+        }
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+}
+
+    private void addBodyState(List<GameState.BodyState> bodies, Object imageOrSprite, Body body, String type) {
+        GameState.BodyState bodyState = new GameState.BodyState();
+        bodyState.type = type;
+        bodyState.x = body.getPosition().x;
+        bodyState.y = body.getPosition().y;
+        bodyState.active = body.isActive();
+        if (imageOrSprite instanceof Image) {
+            bodyState.dead = !stage.getActors().contains((Image) imageOrSprite, true); // Mark as dead if removed from the stage
+        } else if (imageOrSprite instanceof Sprite) {
+            bodyState.dead = false; // Assuming Sprites are not removed from the stage
+        }
+        bodies.add(bodyState);
+    }
+
+    private Image createBird(String type) {
+        Texture birdTexture;
+        switch (type) {
+            case "red":
+                birdTexture = new Texture("birds_piggies/red.png");
+                break;
+            case "chuck":
+                birdTexture = new Texture("birds_piggies/chuck.png");
+                break;
+            case "bomb":
+                birdTexture = new Texture("birds_piggies/bomb.png");
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown bird type: " + type);
+        }
+        Image bird = new Image(birdTexture);
+        bird.setSize(birdTexture.getWidth() / 5, birdTexture.getHeight() / 5);
+        return bird;
+    }
+
+    private Image getImageForType(String type) {
+        switch (type) {
+            case "pig":
+                return pig;
+            case "woodVertical1":
+                return new Image(woodVertical1.getTexture());
+            case "woodVertical2":
+                return new Image(woodVertical2.getTexture());
+            case "woodHorizontal":
+                return new Image(woodHorizontal.getTexture());
+            default:
+                throw new IllegalArgumentException("Unknown type: " + type);
+        }
+    }
+
+    private Body getBodyForImage(Image image) {
+        if (image == pig) {
+            return pigBody;
+        } else if (image.getDrawable() instanceof TextureRegionDrawable) {
+            TextureRegionDrawable drawable = (TextureRegionDrawable) image.getDrawable();
+            if (drawable.getRegion().getTexture() == woodVertical1.getTexture()) {
+                return woodVertical1Body;
+            } else if (drawable.getRegion().getTexture() == woodVertical2.getTexture()) {
+                return woodVertical2Body;
+            } else if (drawable.getRegion().getTexture() == woodHorizontal.getTexture()) {
+                return woodHorizontalBody;
+            }
+        } else if (image == redBird) {
+            return redBirdBody;
+        } else if (image == chuckBird) {
+            return chuckBirdBody;
+        } else if (image == bombBird) {
+            return bombBirdBody;
+        } else {
+            throw new IllegalArgumentException("Unknown image: " + image);
+        }
+        return null;
+    }
 
     @Override
     public void show() {
@@ -343,7 +355,7 @@ public class Level1Screen implements Screen, ContactListener {
         save.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-//                saveGameState();
+                saveGameState();
                 System.out.println("Game saved!");
             }
         });
@@ -367,11 +379,11 @@ public class Level1Screen implements Screen, ContactListener {
         stage.addActor(redBird);
 
         font = new BitmapFont();
-font.setColor(com.badlogic.gdx.graphics.Color.BLACK);
+        font.setColor(com.badlogic.gdx.graphics.Color.BLACK);
 
-//        if (loadGame) {
-//            loadGameState();
-//        }
+        if (loadGame) {
+            loadGameState();
+        }
     }
 
     private void setNextBird() {
@@ -439,7 +451,7 @@ font.setColor(com.badlogic.gdx.graphics.Color.BLACK);
     private void createGround() {
         BodyDef groundDef = new BodyDef();
         groundDef.type = BodyDef.BodyType.StaticBody;
-        groundDef.position.set(0, 0.3f); // Slightly above 0 to be visible
+        groundDef.position.set(0, 0.4f); // Slightly above 0 to be visible
 
         groundBody = world.createBody(groundDef);
 
@@ -568,7 +580,7 @@ font.setColor(com.badlogic.gdx.graphics.Color.BLACK);
         woodVertical1.draw(batch);
         woodVertical2.draw(batch);
         woodHorizontal.draw(batch);
-        font.draw(batch, "" + score + " ",  530, 1080 - 40);
+        font.draw(batch, "" + score + " ", 530, 1080 - 40);
         batch.end();
         stage.draw();
 
@@ -769,7 +781,7 @@ font.setColor(com.badlogic.gdx.graphics.Color.BLACK);
                     score += 100;
                     System.out.println("Pig Health: " + pigHealth);
                     if (pigHealth <= 100 && pigHealth > 0) {
-//                        pig.setDrawable(new TextureRegionDrawable(new TextureRegion(new Texture("birds_piggies/normal_pig_damaged.png"))));
+//                    pig.setDrawable(new TextureRegionDrawable(new TextureRegion(new Texture("birds_piggies/normal_pig_damaged.png"))));
                     }
                     if (pigHealth <= 0) {
                         pigCount--;
@@ -788,7 +800,7 @@ font.setColor(com.badlogic.gdx.graphics.Color.BLACK);
 
                     System.out.println("Pig Health: " + pigHealth);
                     if (pigHealth <= 100 && pigHealth > 0) {
-//                        pig.setDrawable(new TextureRegionDrawable(new TextureRegion(new Texture("birds_piggies/normal_pig_damaged.png"))));
+//                    pig.setDrawable(new TextureRegionDrawable(new TextureRegion(new Texture("birds_piggies/normal_pig_damaged.png"))));
                     }
                     if (pigHealth <= 0) {
                         pigCount--;
@@ -809,8 +821,6 @@ font.setColor(com.badlogic.gdx.graphics.Color.BLACK);
                             woodVertical1.setPosition(-1000, -1000);
                             destroyBlock1Body = true;
                             woodVertical1.setTexture(new Texture("birds_piggies/empty.png"));
-
-
                         }
                     }
                 }
@@ -823,9 +833,6 @@ font.setColor(com.badlogic.gdx.graphics.Color.BLACK);
                             woodVertical2.setPosition(-1000, -1000);
                             destroyBlock2Body = true;
                             woodVertical2.setTexture(new Texture("birds_piggies/empty.png"));
-
-//                            woodVertical2.setDrawable(new TextureRegionDrawable(new TextureRegion(new Texture("birds_piggies/empty.png"))));
-
                         }
                     }
                 }
@@ -838,10 +845,42 @@ font.setColor(com.badlogic.gdx.graphics.Color.BLACK);
                             woodHorizontal.setPosition(-1000, -1000);
                             destroyBlock3Body = true;
                             woodHorizontal.setTexture(new Texture("birds_piggies/empty.png"));
-
-//                            woodHorizontal.setDrawable(new TextureRegionDrawable(new TextureRegion(new Texture("birds_piggies/empty.png"))));
-
                         }
+                    }
+                }
+            }
+
+            // Fall damage for blocks
+            if (bodyA.equals(woodVertical1Body) || bodyB.equals(woodVertical1Body)) {
+                if (bodyA.equals(groundBody) || bodyB.equals(groundBody)) {
+                    blockHealth1 -= 50;
+                    score += 40;
+                    if (blockHealth1 <= 0) {
+                        woodVertical1.setPosition(-1000, -1000);
+                        destroyBlock1Body = true;
+                        woodVertical1.setTexture(new Texture("birds_piggies/empty.png"));
+                    }
+                }
+            }
+            if (bodyA.equals(woodVertical2Body) || bodyB.equals(woodVertical2Body)) {
+                if (bodyA.equals(groundBody) || bodyB.equals(groundBody)) {
+                    blockHealth2 -= 50;
+                    score += 40;
+                    if (blockHealth2 <= 0) {
+                        woodVertical2.setPosition(-1000, -1000);
+                        destroyBlock2Body = true;
+                        woodVertical2.setTexture(new Texture("birds_piggies/empty.png"));
+                    }
+                }
+            }
+            if (bodyA.equals(woodHorizontalBody) || bodyB.equals(woodHorizontalBody)) {
+                if (bodyA.equals(groundBody) || bodyB.equals(groundBody)) {
+                    blockHealth3 -= 50;
+                    score += 40;
+                    if (blockHealth3 <= 0) {
+                        woodHorizontal.setPosition(-1000, -1000);
+                        destroyBlock3Body = true;
+                        woodHorizontal.setTexture(new Texture("birds_piggies/empty.png"));
                     }
                 }
             }
