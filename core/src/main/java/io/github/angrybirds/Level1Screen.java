@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Cursor;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -19,10 +20,8 @@ import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
-import java.io.*;
-import java.util.ArrayList;
+import java.awt.*;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Queue;
 
 public class Level1Screen implements Screen, ContactListener {
@@ -35,7 +34,7 @@ public class Level1Screen implements Screen, ContactListener {
     private final float RESTITUTION = 0.2f;
     public boolean loadGame = false;
     public Queue<Image> birdQueue = new LinkedList<>();
-
+    public int pigHealth = 200;
     int score;
     private SpriteBatch batch;
     private Texture bgImage;
@@ -79,8 +78,8 @@ public class Level1Screen implements Screen, ContactListener {
     private boolean destroyBlock3Body = false;
     private int currentBirdIndex = 0;
     private boolean birdLaunched = false;
-    public int pigHealth = 200;
     private int blockHealth1, blockHealth2, blockHealth3;
+    private BitmapFont font;
 
     public Level1Screen() {
     }
@@ -278,19 +277,19 @@ public class Level1Screen implements Screen, ContactListener {
 
         // Create two vertical wood blocks (fort sides)
         woodVertical1 = new Sprite(woodVerticalTexture);
-woodVertical2 = new Sprite(woodVerticalTexture);
-woodVertical1.setPosition(Gdx.graphics.getWidth() / 2f - 80, pig.getY() - 30);
-woodVertical2.setPosition(Gdx.graphics.getWidth() / 2f + pig.getWidth() - 30, pig.getY() - 30);
-woodVertical1.setPosition(woodVertical1.getX() + 400, woodVertical1.getY() + 35);
-woodVertical2.setPosition(woodVertical2.getX() + 400, woodVertical2.getY() + 35);
-woodVertical1Body = createRectangularBody(woodVertical1, false, DENSITY, FRICTION, RESTITUTION);
-woodVertical2Body = createRectangularBody(woodVertical2, false, DENSITY, FRICTION, RESTITUTION);
+        woodVertical2 = new Sprite(woodVerticalTexture);
+        woodVertical1.setPosition(Gdx.graphics.getWidth() / 2f - 80, pig.getY() - 30);
+        woodVertical2.setPosition(Gdx.graphics.getWidth() / 2f + pig.getWidth() - 30, pig.getY() - 30);
+        woodVertical1.setPosition(woodVertical1.getX() + 400, woodVertical1.getY() + 35);
+        woodVertical2.setPosition(woodVertical2.getX() + 400, woodVertical2.getY() + 35);
+        woodVertical1Body = createRectangularBody(woodVertical1, false, DENSITY, FRICTION, RESTITUTION);
+        woodVertical2Body = createRectangularBody(woodVertical2, false, DENSITY, FRICTION, RESTITUTION);
 
 // Create a horizontal wood block (fort top)
-woodHorizontal = new Sprite(woodHorizontalTexture);
-woodHorizontal.setPosition(Gdx.graphics.getWidth() / 2f - 20, pig.getY() + pig.getHeight() - 10);
-woodHorizontal.setPosition(woodHorizontal.getX() + 310, woodHorizontal.getY() + 115);
-woodHorizontalBody = createRectangularBody(woodHorizontal, false, DENSITY, FRICTION, RESTITUTION);
+        woodHorizontal = new Sprite(woodHorizontalTexture);
+        woodHorizontal.setPosition(Gdx.graphics.getWidth() / 2f - 20, pig.getY() + pig.getHeight() - 10);
+        woodHorizontal.setPosition(woodHorizontal.getX() + 310, woodHorizontal.getY() + 115);
+        woodHorizontalBody = createRectangularBody(woodHorizontal, false, DENSITY, FRICTION, RESTITUTION);
         // Create the slingshot and position it on the left side of the screen
         slingshot = new Image(slingshotTexture);
         slingshot.setSize(slingshot.getWidth() / 5, slingshot.getHeight() / 5);
@@ -366,6 +365,9 @@ woodHorizontalBody = createRectangularBody(woodHorizontal, false, DENSITY, FRICT
         stage.addActor(save);
         stage.addActor(currentBird);
         stage.addActor(redBird);
+
+        font = new BitmapFont();
+font.setColor(com.badlogic.gdx.graphics.Color.BLACK);
 
 //        if (loadGame) {
 //            loadGameState();
@@ -503,33 +505,32 @@ woodHorizontalBody = createRectangularBody(woodHorizontal, false, DENSITY, FRICT
     }
 
     private Body createRectangularBody(Sprite sprite, boolean isStatic, float density, float friction, float restitution) {
-    BodyDef bodyDef = new BodyDef();
-    bodyDef.type = isStatic ? BodyDef.BodyType.StaticBody : BodyDef.BodyType.DynamicBody;
-    bodyDef.position.set(
-        (sprite.getX() + sprite.getWidth() / 2) / PPM,
-        (sprite.getY() + sprite.getHeight() / 2) / PPM
-    );
+        BodyDef bodyDef = new BodyDef();
+        bodyDef.type = isStatic ? BodyDef.BodyType.StaticBody : BodyDef.BodyType.DynamicBody;
+        bodyDef.position.set(
+            (sprite.getX() + sprite.getWidth() / 2) / PPM,
+            (sprite.getY() + sprite.getHeight() / 2) / PPM
+        );
 
-    Body body = world.createBody(bodyDef);
+        Body body = world.createBody(bodyDef);
 
-    PolygonShape rectangle = new PolygonShape();
-    rectangle.setAsBox(
-        (sprite.getWidth() / 2) / PPM,
-        (sprite.getHeight() / 2) / PPM
-    );
+        PolygonShape rectangle = new PolygonShape();
+        rectangle.setAsBox(
+            (sprite.getWidth() / 2) / PPM,
+            (sprite.getHeight() / 2) / PPM
+        );
 
-    FixtureDef fixtureDef = new FixtureDef();
-    fixtureDef.shape = rectangle;
-    fixtureDef.density = density;
-    fixtureDef.friction = friction;
-    fixtureDef.restitution = restitution;
+        FixtureDef fixtureDef = new FixtureDef();
+        fixtureDef.shape = rectangle;
+        fixtureDef.density = density;
+        fixtureDef.friction = friction;
+        fixtureDef.restitution = restitution;
 
-    body.createFixture(fixtureDef);
-    rectangle.dispose();
+        body.createFixture(fixtureDef);
+        rectangle.dispose();
 
-    return body;
-}
-
+        return body;
+    }
 
 
     private void updateImagePosition(Image image, Body body) {
@@ -541,12 +542,12 @@ woodHorizontalBody = createRectangularBody(woodHorizontal, false, DENSITY, FRICT
     }
 
     private void updateImagePosition1(Sprite sprite, Body body) {
-    Vector2 position = body.getPosition();
-    sprite.setPosition(position.x * PPM - sprite.getWidth() / 2, position.y * PPM - sprite.getHeight() / 2);
+        Vector2 position = body.getPosition();
+        sprite.setPosition(position.x * PPM - sprite.getWidth() / 2, position.y * PPM - sprite.getHeight() / 2);
 
-    // Update the sprite's rotation
-    sprite.setRotation((float) Math.toDegrees(body.getAngle()));
-}
+        // Update the sprite's rotation
+        sprite.setRotation((float) Math.toDegrees(body.getAngle()));
+    }
 
     @Override
     public void render(float delta) {
@@ -567,6 +568,7 @@ woodHorizontalBody = createRectangularBody(woodHorizontal, false, DENSITY, FRICT
         woodVertical1.draw(batch);
         woodVertical2.draw(batch);
         woodHorizontal.draw(batch);
+        font.draw(batch, "" + score + " ",  530, 1080 - 40);
         batch.end();
         stage.draw();
 
@@ -616,6 +618,7 @@ woodHorizontalBody = createRectangularBody(woodHorizontal, false, DENSITY, FRICT
             world.destroyBody(woodHorizontalBody);
             destroyBlock3Body = false;
         }
+
 
         // Render debug information
         debugRenderer.render(world, stage.getCamera().combined);
@@ -748,6 +751,8 @@ woodHorizontalBody = createRectangularBody(woodHorizontal, false, DENSITY, FRICT
         Body bodyA = contact.getFixtureA().getBody();
         Body bodyB = contact.getFixtureB().getBody();
 
+        System.out.println();
+
         if ((bodyA.equals(groundBody) || bodyB.equals(groundBody))) {
             return;
         }
@@ -761,6 +766,7 @@ woodHorizontalBody = createRectangularBody(woodHorizontal, false, DENSITY, FRICT
             if (bodyA.equals(pigBody) || bodyB.equals(pigBody)) {
                 if ((bodyA.equals(woodVertical1Body) || bodyB.equals(woodVertical1Body)) || (bodyA.equals(woodVertical2Body) || bodyB.equals(woodVertical2Body)) || (bodyA.equals(woodHorizontalBody) || bodyB.equals(woodHorizontalBody))) {
                     pigHealth -= 50;
+                    score += 100;
                     System.out.println("Pig Health: " + pigHealth);
                     if (pigHealth <= 100 && pigHealth > 0) {
 //                        pig.setDrawable(new TextureRegionDrawable(new TextureRegion(new Texture("birds_piggies/normal_pig_damaged.png"))));
@@ -778,12 +784,16 @@ woodHorizontalBody = createRectangularBody(woodHorizontal, false, DENSITY, FRICT
             if (speed > 5) {
                 if (bodyA.equals(pigBody) || bodyB.equals(pigBody)) {
                     pigHealth -= 50;
+                    score += 100;
+
                     System.out.println("Pig Health: " + pigHealth);
                     if (pigHealth <= 100 && pigHealth > 0) {
 //                        pig.setDrawable(new TextureRegionDrawable(new TextureRegion(new Texture("birds_piggies/normal_pig_damaged.png"))));
                     }
                     if (pigHealth <= 0) {
                         pigCount--;
+                        score += 100;
+
                         pig.setPosition(-1000, -1000);
                         pig.setVisible(false);
                         destroyPigBody = true;
@@ -793,6 +803,8 @@ woodHorizontalBody = createRectangularBody(woodHorizontal, false, DENSITY, FRICT
                 if (bodyA.equals(woodVertical1Body) || bodyB.equals(woodVertical1Body)) {
                     if (bodyA.equals(currentBirdBody) || bodyB.equals(currentBirdBody)) {
                         blockHealth1 -= 50;
+                        score += 40;
+
                         if (blockHealth1 <= 0) {
                             woodVertical1.setPosition(-1000, -1000);
                             destroyBlock1Body = true;
@@ -805,6 +817,8 @@ woodHorizontalBody = createRectangularBody(woodHorizontal, false, DENSITY, FRICT
                 if (bodyA.equals(woodVertical2Body) || bodyB.equals(woodVertical2Body)) {
                     if (bodyA.equals(currentBirdBody) || bodyB.equals(currentBirdBody)) {
                         blockHealth2 -= 50;
+                        score += 40;
+
                         if (blockHealth2 <= 0) {
                             woodVertical2.setPosition(-1000, -1000);
                             destroyBlock2Body = true;
@@ -818,6 +832,8 @@ woodHorizontalBody = createRectangularBody(woodHorizontal, false, DENSITY, FRICT
                 if (bodyA.equals(woodHorizontalBody) || bodyB.equals(woodHorizontalBody)) {
                     if (bodyA.equals(currentBirdBody) || bodyB.equals(currentBirdBody)) {
                         blockHealth3 -= 50;
+                        score += 40;
+
                         if (blockHealth3 <= 0) {
                             woodHorizontal.setPosition(-1000, -1000);
                             destroyBlock3Body = true;
@@ -831,9 +847,7 @@ woodHorizontalBody = createRectangularBody(woodHorizontal, false, DENSITY, FRICT
             }
         }
         birdLaunched = true;
-
     }
-
 
     @Override
     public void endContact(Contact contact) {
