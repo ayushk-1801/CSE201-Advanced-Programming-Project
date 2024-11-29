@@ -261,6 +261,7 @@ public class Level1Screen implements Screen, ContactListener {
 
         // Create ground
         createGround();
+        createWalls();
 
         batch = new SpriteBatch();
         bgImage = new Texture("background/level_bg.png");
@@ -466,6 +467,42 @@ public class Level1Screen implements Screen, ContactListener {
         groundShape.dispose();
     }
 
+    private void createWalls() {
+        // Create left wall
+        BodyDef leftWallDef = new BodyDef();
+        leftWallDef.type = BodyDef.BodyType.StaticBody;
+        leftWallDef.position.set(0, Gdx.graphics.getHeight() / 2 / PPM);
+
+        Body leftWallBody = world.createBody(leftWallDef);
+
+        PolygonShape leftWallShape = new PolygonShape();
+        leftWallShape.setAsBox(1, Gdx.graphics.getHeight() / 2 / PPM);
+
+        FixtureDef leftWallFixture = new FixtureDef();
+        leftWallFixture.shape = leftWallShape;
+        leftWallFixture.friction = FRICTION;
+
+        leftWallBody.createFixture(leftWallFixture);
+        leftWallShape.dispose();
+
+        // Create right wall
+        BodyDef rightWallDef = new BodyDef();
+        rightWallDef.type = BodyDef.BodyType.StaticBody;
+        rightWallDef.position.set(Gdx.graphics.getWidth() / PPM, Gdx.graphics.getHeight() / 2 / PPM);
+
+        Body rightWallBody = world.createBody(rightWallDef);
+
+        PolygonShape rightWallShape = new PolygonShape();
+        rightWallShape.setAsBox(1, Gdx.graphics.getHeight() / 2 / PPM);
+
+        FixtureDef rightWallFixture = new FixtureDef();
+        rightWallFixture.shape = rightWallShape;
+        rightWallFixture.friction = FRICTION;
+
+        rightWallBody.createFixture(rightWallFixture);
+        rightWallShape.dispose();
+    }
+
     private Body createCircularBody(Image image, float density, float friction, float restitution) {
         BodyDef bodyDef = new BodyDef();
         bodyDef.type = BodyDef.BodyType.DynamicBody;
@@ -633,7 +670,7 @@ public class Level1Screen implements Screen, ContactListener {
 
 
         // Render debug information
-        debugRenderer.render(world, stage.getCamera().combined);
+     debugRenderer.render(world, stage.getViewport().getCamera().combined.scl(PPM));
     }
 
     private void checkAbility() {
