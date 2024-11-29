@@ -1,9 +1,9 @@
-340
+240
 1
 false
 -1
-1
-pig,13.73314,1.6726787,true,false
-woodVertical1,14.060133,1.9828789,true,false
-woodVertical2,15.342442,1.5199031,true,false
-woodHorizontal,3.0,1.63703,true,false
+2
+pig,13.110779,1.6716664,true,false
+woodVertical1,12.859393,1.9668422,true,false
+woodVertical2,15.353097,1.5214951,true,false
+woodHorizontal,13.539654,3.5597188,false,false

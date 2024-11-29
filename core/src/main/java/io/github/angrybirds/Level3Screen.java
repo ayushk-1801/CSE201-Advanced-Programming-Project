@@ -72,7 +72,7 @@ public class Level3Screen implements Screen, ContactListener {
     private Queue<Body> bodiesToDeactivate;
 
     private boolean load = false;
-    private Vector2 catapultPosition = new Vector2(300, 150); // Adjust to match your slingshot position
+    private Vector2 catapultPosition = new Vector2(300, 200); // Adjust to match your slingshot position
     private float catapultRadius = 100f; // Area around the slingshot where dragging is allowed
 
     private boolean pig1killed;
