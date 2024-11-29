@@ -145,42 +145,115 @@ public class Level3Screen implements Screen, ContactListener {
                 birdQueue.poll();
             }
             for (GameState.BodyState bodyState : gameState.bodies) {
-                Image image = getImageForType(bodyState.type);
-                if (image != null) {
-                    Body body = getBodyForImage(image);
+                Object imageOrSprite = getImageOrSpriteForType(bodyState.type);
+                if (imageOrSprite != null) {
+                    Body body = getBodyForImageOrSprite(imageOrSprite);
                     if (!bodyState.dead) {
                         body.setTransform(bodyState.x, bodyState.y, 0);
                         body.setActive(bodyState.active);
-                        updateImagePosition(image, body); // Update the image position
+                        updateImageOrSpritePosition(imageOrSprite, body); // Update the image or sprite position
                     } else {
-                        if (image.equals(pig1)) {
+                        if (imageOrSprite.equals(pig1)) {
                             destroyPigBody1 = true;
                             pig1.setPosition(-1000, -1000);
-                        } else if (image.equals(pig2)) {
+                        } else if (imageOrSprite.equals(pig2)) {
                             destroyPigBody2 = true;
                             pig2.setPosition(-1000, -1000);
-                        } else if (image.equals(helmetPig)) {
+                        } else if (imageOrSprite.equals(helmetPig)) {
                             destroyPigBody3 = true;
                             helmetPig.setPosition(-1000, -1000);
-                        } else if (image.equals(helmetPigOnBlock)) {
+                        } else if (imageOrSprite.equals(helmetPigOnBlock)) {
                             destroyPigBody4 = true;
                             helmetPigOnBlock.setPosition(-1000, -1000);
-                        } else if (image.equals(woodVertical1)) {
+                        } else if (imageOrSprite.equals(woodVertical1)) {
                             destroyBlock1Body = true;
                             woodVertical1.setPosition(-1000, -1000);
-                        } else if (image.equals(woodVertical2)) {
+                        } else if (imageOrSprite.equals(woodVertical2)) {
                             destroyBlock2Body = true;
                             woodVertical2.setPosition(-1000, -1000);
-                        } else if (image.equals(woodHorizontal)) {
+                        } else if (imageOrSprite.equals(woodHorizontal)) {
                             destroyBlock3Body = true;
                             woodHorizontal.setPosition(-1000, -1000);
+                        } else if (imageOrSprite instanceof Sprite && imageOrSprite.equals(woodVertical1)) {
+                            destroyBlock1Body = true;
+                            ((Sprite) imageOrSprite).setPosition(-1000, -1000);
+                        } else if (imageOrSprite instanceof Sprite && imageOrSprite.equals(woodVertical2)) {
+                            destroyBlock2Body = true;
+                            ((Sprite) imageOrSprite).setPosition(-1000, -1000);
+                        } else if (imageOrSprite instanceof Sprite && imageOrSprite.equals(woodHorizontal)) {
+                            destroyBlock3Body = true;
+                            ((Sprite) imageOrSprite).setPosition(-1000, -1000);
                         }
-                        stage.getActors().removeValue(image, true); // Remove the image from the stage if it is dead
+                        if (imageOrSprite instanceof Image) {
+                            stage.getActors().removeValue((Image) imageOrSprite, true); // Remove the image from the stage if it is dead
+                        }
                     }
                 }
             }
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
+        }
+    }
+
+    private Object getImageOrSpriteForType(String type) {
+        switch (type) {
+            case "pig1":
+                return pig1;
+            case "pig2":
+                return pig2;
+            case "helmetPig":
+                return helmetPig;
+            case "helmetPigOnBlock":
+                return helmetPigOnBlock;
+            case "woodVertical1":
+                return woodVertical1;
+            case "woodVertical2":
+                return woodVertical2;
+            case "woodHorizontal":
+                return woodHorizontal;
+            default:
+                return null;
+        }
+    }
+
+    private Body getBodyForImageOrSprite(Object imageOrSprite) {
+        if (imageOrSprite.equals(pig1)) {
+            return pig1Body;
+        } else if (imageOrSprite.equals(pig2)) {
+            return pig2Body;
+        } else if (imageOrSprite.equals(helmetPig)) {
+            return helmetPigBody;
+        } else if (imageOrSprite.equals(helmetPigOnBlock)) {
+            return helmetPigOnBlockBody;
+        } else if (imageOrSprite.equals(woodVertical1)) {
+            return woodVertical1Body;
+        } else if (imageOrSprite.equals(woodVertical2)) {
+            return woodVertical2Body;
+        } else if (imageOrSprite.equals(woodHorizontal)) {
+            return woodHorizontalBody;
+        } else {
+            return null;
+        }
+    }
+
+    private void updateImageOrSpritePosition(Object imageOrSprite, Body body) {
+        if (imageOrSprite instanceof Image) {
+            ((Image) imageOrSprite).setPosition(body.getPosition().x * PPM, body.getPosition().y * PPM);
+        } else if (imageOrSprite instanceof Sprite) {
+            ((Sprite) imageOrSprite).setPosition(body.getPosition().x * PPM, body.getPosition().y * PPM);
+        }
+    }
+
+    private Sprite getBlockForType(String type) {
+        switch (type) {
+            case "woodVertical1":
+                return woodVertical1;
+            case "woodVertical2":
+                return woodVertical2;
+            case "woodHorizontal":
+                return woodHorizontal;
+            default:
+                return null;
         }
     }
 
@@ -407,10 +480,23 @@ public class Level3Screen implements Screen, ContactListener {
 
         // Add actors to the stage
         stage.addActor(slingshot);
-        stage.addActor(pig1);
-        stage.addActor(helmetPig);
-        stage.addActor(pig2);
+//        stage.addActor(pig1);
+//        stage.addActor(helmetPig);
+//        stage.addActor(pig2);
         stage.addActor(helmetPigOnBlock);
+        if(!destroyPigBody1) {
+            stage.addActor(pig1);
+        }
+        if(!destroyPigBody2) {
+            stage.addActor(pig2);
+        }
+        if(!destroyPigBody3) {
+            stage.addActor(helmetPig);
+        }
+        if(!destroyPigBody4) {
+            stage.addActor(helmetPigOnBlock);
+        }
+
 //        stage.addActor(gunPig);
         stage.addActor(pause);
         stage.addActor(skip);
@@ -653,9 +739,18 @@ public class Level3Screen implements Screen, ContactListener {
         stage.act(Gdx.graphics.getDeltaTime());
         batch.begin();
         batch.draw(bgImage, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        woodVertical1.draw(batch);
-        woodVertical2.draw(batch);
-        woodHorizontal.draw(batch);
+        if (!destroyBlock1Body) {
+            woodVertical1.draw(batch);
+        }
+        if (!destroyBlock2Body) {
+            woodVertical2.draw(batch);
+        }
+        if (!destroyBlock3Body) {
+            woodHorizontal.draw(batch);
+        }
+//        woodVertical1.draw(batch);
+//        woodVertical2.draw(batch);
+//        woodHorizontal.draw(batch);
         font.draw(batch, "" + score + " ", 530, 1080 - 40);
 
         batch.end();
