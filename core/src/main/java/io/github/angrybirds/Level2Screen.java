@@ -268,6 +268,7 @@ public class Level2Screen implements Screen, ContactListener {
         Texture helmetPigTexture = new Texture("birds_piggies/helmet_pig.png");
         Texture woodVerticalTexture = new Texture("materials/vertical_wood.png");
         Texture woodHorizontalTexture = new Texture("materials/horizontal_wood.png");
+        Texture glassVerticalTexture = new Texture("materials/glass.png");
         Texture slingshotTexture = new Texture("birds_piggies/slingshot.png");
         Texture skipTexture = new Texture("buttons/skip.png");
         Texture saveTexture = new Texture("buttons/save.png");
@@ -294,7 +295,7 @@ public class Level2Screen implements Screen, ContactListener {
         pig2Body = createCircularBody(pig2, DENSITY, FRICTION, RESTITUTION);
 
         // Create two vertical wood blocks (fort sides)
-        woodVertical1 = new Sprite(woodVerticalTexture);
+        woodVertical1 = new Sprite(glassVerticalTexture);
         woodVertical2 = new Sprite(woodVerticalTexture);
         woodVertical1.setPosition(Gdx.graphics.getWidth() / 2f - 80, pig1.getY() - 30);
         woodVertical2.setPosition(Gdx.graphics.getWidth() / 2f + pig1.getWidth() - 30, pig1.getY() - 30);
@@ -960,8 +961,8 @@ public class Level2Screen implements Screen, ContactListener {
                 }
                 if (bodyA.equals(woodVertical1Body) || bodyB.equals(woodVertical1Body)) {
                     if (bodyA.equals(currentBirdBody) || bodyB.equals(currentBirdBody)) {
-                        blockHealth1 -= 50;
-                        score += 40;
+                        blockHealth1 -= 30;
+                        score += 30;
 
                         if (blockHealth1 <= 0) {
                             woodVertical1.setPosition(-1000, -1000);
