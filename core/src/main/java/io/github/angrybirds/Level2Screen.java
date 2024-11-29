@@ -18,13 +18,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import java.util.ArrayList;
-import java.util.List;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.BufferedReader;
-import java.io.FileReader;
+
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -81,6 +75,7 @@ public class Level2Screen implements Screen, ContactListener {
     private float catapultRadius = 100f; // Area around the slingshot where dragging is allowed
     private int pighits = 0;
     private boolean load = false;
+    private boolean launched =false;
 
     private boolean destroyPigBody1 = false;
     private boolean destroyPigBody2 = false;
@@ -103,143 +98,143 @@ public class Level2Screen implements Screen, ContactListener {
         this.load = load;
     }
 
-    public void saveGameState() {
-        System.out.println("Saving game state...");
-        GameState gameState = new GameState();
-        gameState.score = score;
-        gameState.pigCount = pigCount;
-        gameState.contactDetected = contactDetected;
-        gameState.timeOfContact = timeOfContact;
-        gameState.birdCount = birdQueue.size(); // Store the number of birds left
-
-        gameState.bodies = new ArrayList<>(); // Initialize the bodies list
-        addBodyState(gameState.bodies, pig1, pig1Body, "pig1");
-        addBodyState(gameState.bodies, pig2, pig2Body, "pig2");
-        addBodyState(gameState.bodies, helmetPig, helmetPigBody, "helmetPig");
-        addBodyState(gameState.bodies, woodVertical1, woodVertical1Body, "woodVertical1");
-        addBodyState(gameState.bodies, woodVertical2, woodVertical2Body, "woodVertical2");
-        addBodyState(gameState.bodies, woodHorizontal, woodHorizontalBody, "woodHorizontal");
-
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter("storage/lvl2.txt"))) {
-            writer.write(gameState.score + "\n");
-            writer.write(gameState.pigCount + "\n");
-            writer.write(gameState.contactDetected + "\n");
-            writer.write(gameState.timeOfContact + "\n");
-            writer.write(gameState.birdCount + "\n");
-
-            for (GameState.BodyState body : gameState.bodies) {
-                writer.write(body.type + "," + body.x + "," + body.y + "," + body.active + "," + body.dead + "\n");
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void loadGameState() {
-        try (BufferedReader reader = new BufferedReader(new FileReader("storage/lvl2.txt"))) {
-            GameState gameState = new GameState();
-            gameState.score = Integer.parseInt(reader.readLine());
-            gameState.pigCount = Integer.parseInt(reader.readLine());
-            gameState.contactDetected = Boolean.parseBoolean(reader.readLine());
-            gameState.timeOfContact = Long.parseLong(reader.readLine());
-            gameState.birdCount = Integer.parseInt(reader.readLine());
-
-            gameState.bodies = new ArrayList<>();
-            String line;
-            while ((line = reader.readLine()) != null && line.contains(",")) {
-                String[] parts = line.split(",");
-                if (parts.length == 5) {
-                    GameState.BodyState bodyState = new GameState.BodyState();
-                    bodyState.type = parts[0];
-                    bodyState.x = Float.parseFloat(parts[1]);
-                    bodyState.y = Float.parseFloat(parts[2]);
-                    bodyState.active = Boolean.parseBoolean(parts[3]);
-                    bodyState.dead = Boolean.parseBoolean(parts[4]);
-                    gameState.bodies.add(bodyState);
-                }
-            }
-
-            score = gameState.score;
-            pigCount = gameState.pigCount;
-            contactDetected = gameState.contactDetected;
-            timeOfContact = gameState.timeOfContact;
-            for (int i = birdQueue.size(); i > gameState.birdCount; i--) {
-                birdQueue.poll();
-            }
-            for (GameState.BodyState bodyState : gameState.bodies) {
-                if (!bodyState.dead) {
-                    Image image = getImageForType(bodyState.type);
-                    Body body = getBodyForImage(image);
-                    body.setTransform(bodyState.x, bodyState.y, 0);
-                    body.setActive(bodyState.active);
-                    stage.addActor(image); // Ensure the image is added back to the stage
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void addBodyState(List<GameState.BodyState> bodies, Object imageOrSprite, Body body, String type) {
-        GameState.BodyState bodyState = new GameState.BodyState();
-        bodyState.type = type;
-        bodyState.x = body.getPosition().x;
-        bodyState.y = body.getPosition().y;
-        bodyState.active = body.isActive();
-        if (imageOrSprite instanceof Image) {
-            bodyState.dead = !stage.getActors().contains((Image) imageOrSprite, true); // Mark as dead if removed from the stage
-        } else if (imageOrSprite instanceof Sprite) {
-            bodyState.dead = false; // Assuming Sprites are not removed from the stage
-        }
-        bodies.add(bodyState);
-    }
-
-    private Image getImageForType(String type) {
-        switch (type) {
-            case "pig1":
-                return pig1;
-            case "pig2":
-                return pig2;
-            case "pig3":
-                return helmetPig;
-            case "woodVertical1":
-                return new Image(woodVertical1.getTexture());
-            case "woodVertical2":
-                return new Image(woodVertical2.getTexture());
-            case "woodHorizontal":
-                return new Image(woodHorizontal.getTexture());
-            default:
-                throw new IllegalArgumentException("Unknown type: " + type);
-        }
-    }
-
-    private Body getBodyForImage(Image image) {
-        if (image == pig1) {
-            return pig1Body;
-        } else if (image == pig2) {
-            return pig2Body;
-        } else if (image == helmetPig) {
-            return helmetPigBody;
-        } else if (image.getDrawable() instanceof TextureRegionDrawable) {
-            TextureRegionDrawable drawable = (TextureRegionDrawable) image.getDrawable();
-            if (drawable.getRegion().getTexture() == woodVertical1.getTexture()) {
-                return woodVertical1Body;
-            } else if (drawable.getRegion().getTexture() == woodVertical2.getTexture()) {
-                return woodVertical2Body;
-            } else if (drawable.getRegion().getTexture() == woodHorizontal.getTexture()) {
-                return woodHorizontalBody;
-            }
-        } else if (image == redBird) {
-            return redBirdBody;
-        } else if (image == chuckBird) {
-            return chuckBirdBody;
-        } else if (image == bombBird) {
-            return bombBirdBody;
-        } else {
-            throw new IllegalArgumentException("Unknown image: " + image);
-        }
-        return null;
-    }
+//    public void saveGameState() {
+//        System.out.println("Saving game state...");
+//        GameState gameState = new GameState();
+//        gameState.score = score;
+//        gameState.pigCount = pigCount;
+//        gameState.contactDetected = contactDetected;
+//        gameState.timeOfContact = timeOfContact;
+//        gameState.birdCount = birdQueue.size(); // Store the number of birds left
+//
+//        gameState.bodies = new ArrayList<>(); // Initialize the bodies list
+//        addBodyState(gameState.bodies, pig1, pig1Body, "pig1", "pig1");
+//        addBodyState(gameState.bodies, pig2, pig2Body, "pig2", "pig2");
+//        addBodyState(gameState.bodies, helmetPig, helmetPigBody, "helmetPig", "pig3");
+//        addBodyState(gameState.bodies, woodVertical1, woodVertical1Body, "woodVertical1", "block");
+//        addBodyState(gameState.bodies, woodVertical2, woodVertical2Body, "woodVertical2", "block");
+//        addBodyState(gameState.bodies, woodHorizontal, woodHorizontalBody, "woodHorizontal", "block");
+//
+//        try (BufferedWriter writer = new BufferedWriter(new FileWriter("storage/lvl2.txt"))) {
+//            writer.write(gameState.score + "\n");
+//            writer.write(gameState.pigCount + "\n");
+//            writer.write(gameState.contactDetected + "\n");
+//            writer.write(gameState.timeOfContact + "\n");
+//            writer.write(gameState.birdCount + "\n");
+//
+//            for (GameState.BodyState body : gameState.bodies) {
+//                writer.write(body.type + "," + body.x + "," + body.y + "," + body.active + "," + body.dead + "\n");
+//            }
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
+//
+//    public void loadGameState() {
+//        try (BufferedReader reader = new BufferedReader(new FileReader("storage/lvl2.txt"))) {
+//            GameState gameState = new GameState();
+//            gameState.score = Integer.parseInt(reader.readLine());
+//            gameState.pigCount = Integer.parseInt(reader.readLine());
+//            gameState.contactDetected = Boolean.parseBoolean(reader.readLine());
+//            gameState.timeOfContact = Long.parseLong(reader.readLine());
+//            gameState.birdCount = Integer.parseInt(reader.readLine());
+//
+//            gameState.bodies = new ArrayList<>();
+//            String line;
+//            while ((line = reader.readLine()) != null && line.contains(",")) {
+//                String[] parts = line.split(",");
+//                if (parts.length == 5) {
+//                    GameState.BodyState bodyState = new GameState.BodyState();
+//                    bodyState.type = parts[0];
+//                    bodyState.x = Float.parseFloat(parts[1]);
+//                    bodyState.y = Float.parseFloat(parts[2]);
+//                    bodyState.active = Boolean.parseBoolean(parts[3]);
+//                    bodyState.dead = Boolean.parseBoolean(parts[4]);
+//                    gameState.bodies.add(bodyState);
+//                }
+//            }
+//
+//            score = gameState.score;
+//            pigCount = gameState.pigCount;
+//            contactDetected = gameState.contactDetected;
+//            timeOfContact = gameState.timeOfContact;
+//            for (int i = birdQueue.size(); i > gameState.birdCount; i--) {
+//                birdQueue.poll();
+//            }
+//            for (GameState.BodyState bodyState : gameState.bodies) {
+//                if (!bodyState.dead) {
+//                    Image image = getImageForType(bodyState.type);
+//                    Body body = getBodyForImage(image);
+//                    body.setTransform(bodyState.x, bodyState.y, 0);
+//                    body.setActive(bodyState.active);
+//                    stage.addActor(image); // Ensure the image is added back to the stage
+//                }
+//            }
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
+//
+//    private void addBodyState(List<GameState.BodyState> bodies, Image image, Body body, String type, String category) {
+//        GameState.BodyState bodyState = new GameState.BodyState();
+//        bodyState.type = type;
+//        bodyState.x = body.getPosition().x;
+//        bodyState.y = body.getPosition().y;
+//        bodyState.active = body.isActive();
+//        if (category.equals("pig1")) {
+//            bodyState.dead = pig1killed;
+//        } else if (category.equals("pig2")) {
+//            bodyState.dead = pig2killed;
+//        } else if (category.equals("pig3")) {
+//            bodyState.dead = pig3killed;
+//        } else {
+//            bodyState.dead = !stage.getActors().contains(image, true);
+//        }
+//        bodies.add(bodyState);
+//    }
+//
+//    private Image getImageForType(String type) {
+//        switch (type) {
+//            case "pig1":
+//                return pig1;
+//            case "pig2":
+//                return pig2;
+//            case "helmetPig":
+//                return helmetPig;
+//            case "woodVertical1":
+//                return woodVertical1;
+//            case "woodVertical2":
+//                return woodVertical2;
+//            case "woodHorizontal":
+//                return woodHorizontal;
+//            default:
+//                throw new IllegalArgumentException("Unknown type: " + type);
+//        }
+//    }
+//
+//    private Body getBodyForImage(Image image) {
+//        if (image == pig1) {
+//            return pig1Body;
+//        } else if (image == pig2) {
+//            return pig2Body;
+//        } else if (image == helmetPig) {
+//            return helmetPigBody;
+//        } else if (image == woodVertical1) {
+//            return woodVertical1Body;
+//        } else if (image == woodVertical2) {
+//            return woodVertical2Body;
+//        } else if (image == woodHorizontal) {
+//            return woodHorizontalBody;
+//        } else if (image == redBird) {
+//            return redBirdBody;
+//        } else if (image == chuckBird) {
+//            return chuckBirdBody;
+//        } else if (image == bombBird) {
+//            return bombBirdBody;
+//        } else {
+//            throw new IllegalArgumentException("Unknown image: " + image);
+//        }
+//    }
 
     @Override
     public void show() {
@@ -382,22 +377,20 @@ public class Level2Screen implements Screen, ContactListener {
         save.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                saveGameState();
+//                saveGameState();
                 System.out.println("Game saved!");
             }
         });
 
         birdQueue = new LinkedList<>();
+        birdQueue.add(bombBird);
         birdQueue.add(redBird);
         birdQueue.add(chuckBird);
-        birdQueue.add(bombBird);
+        
         birdQueue.add(chuckBird1);
         birdQueue.add(chuckBird2);
 
         setNextBird();
-
-        font = new BitmapFont();
-        font.setColor(com.badlogic.gdx.graphics.Color.BLACK);
 
         // Add actors to the stage
         stage.addActor(slingshot);
@@ -413,9 +406,9 @@ public class Level2Screen implements Screen, ContactListener {
         stage.addActor(currentBird);
 
 //        // Load the game state
-        if (load) {
-            loadGameState();
-        }
+//        if (load) {
+//            loadGameState();
+//        }
     }
 
     private void setNextBird() {
@@ -426,6 +419,7 @@ public class Level2Screen implements Screen, ContactListener {
             stage.addActor(currentBird);
         }
         hit = true;
+        launched =false;
     }
 
     private void handleInput() {
@@ -469,7 +463,7 @@ public class Level2Screen implements Screen, ContactListener {
             // Calculate launch velocity
             Vector2 releaseVelocity = catapultPosition.cpy().sub(dragPosition).scl(5 / PPM);
             currentBirdBody.setLinearVelocity(releaseVelocity.x + 5, releaseVelocity.y + 10); // Adjust scaling for desired trajectory
-
+            launched = true;
             // Ensure bird is affected by gravity
             currentBirdBody.setGravityScale(1f);
             launchTime = TimeUtils.nanoTime();
@@ -644,14 +638,13 @@ public class Level2Screen implements Screen, ContactListener {
         woodVertical1.draw(batch);
         woodVertical2.draw(batch);
         woodHorizontal.draw(batch);
-        font.draw(batch, "" + score + " ", 530, 1080 - 40);
-
         batch.end();
         stage.draw();
 
         if (isDragging) {
             drawTrajectory();
         }
+        ability();
 
         if (launchTime != -1 && TimeUtils.nanoTime() - launchTime > 10 * 1000000000L) {
             currentBirdBody.setLinearVelocity(0, 0);  // Stop the bird's movement
@@ -733,7 +726,86 @@ public class Level2Screen implements Screen, ContactListener {
 
         shapeRenderer.end();
     }
+    private void ability() {
+     // Check if the user clicked anywhere on the screen
+     if (Gdx.input.justTouched()&&launched) {
+        // Check if the current bird is Chuck
+        if (currentBird.equals(chuckBird)) {
+            // Ensure the bird is launched and a time delay has passed
+            if (launched && TimeUtils.nanoTime() - launchTime > 500000000L) {
+                // Get the bird's current velocity
+                Vector2 currentVelocity = currentBirdBody.getLinearVelocity();
 
+                // Double the velocity
+                Vector2 newVelocity = currentVelocity.scl(2f);
+
+                // Apply the new velocity to the bird
+                currentBirdBody.setLinearVelocity(newVelocity);
+
+                // Optionally, prevent repeated activation
+                launched = false; // Or use a separate flag like `abilityUsed = true;`
+            }
+        }
+        else if (currentBird == bombBird) {
+            // Check if the screen is being clicked and the bird has been launched
+            if ( launched&&TimeUtils.nanoTime() - launchTime > 500000000L) {
+                // Get the bomb's current position
+                Vector2 bombPosition = currentBirdBody.getPosition();
+
+                    Vector2 bodyPosition = pig1Body.getPosition();
+
+                    float distance = bombPosition.dst(bodyPosition);
+        
+                    if (distance <= 50f) {
+                        pigHealth1 -= 100;
+                        }
+
+                    bodyPosition = pig2Body.getPosition();
+                    distance = bombPosition.dst(bodyPosition);
+                    if (distance <= 50f) {
+                        pigHealth2 -= 100;
+                    }
+                    bodyPosition = helmetPigBody.getPosition();
+                    distance = bombPosition.dst(bodyPosition);
+                    if (distance <= 50f) {
+                        pigHealth3 -= 100;
+                    }
+                    bodyPosition = woodVertical1Body.getPosition();
+                    distance = bombPosition.dst(bodyPosition);
+                    if (distance <= 50f) {
+                        blockHealth1-=100;
+                    }
+                    bodyPosition = woodVertical2Body.getPosition();
+                    distance = bombPosition.dst(bodyPosition);
+                    if (distance <= 50f) {
+                        blockHealth2-=100;
+                    }
+                    bodyPosition = woodHorizontalBody.getPosition();
+                    distance = bombPosition.dst(bodyPosition);
+                    if (distance <= 50f) {
+                        blockHealth3-=100;
+                    }
+                    Vector2 currentVelocity = currentBirdBody.getLinearVelocity();
+
+                    // Double the velocity
+                    Vector2 newVelocity = currentVelocity.scl(0.5f);
+    
+                    // Apply the new velocity to the bird
+                    currentBirdBody.setLinearVelocity(newVelocity);
+                    
+                }
+                launched = false;
+                
+            }
+            }
+        }
+            
+        
+        
+
+    
+    
+    
 //    private void checkContact() {
 //        if (isContact(currentBirdBody, pig1Body)) {
 //            handlePigContact(pig1, pig1Body);
