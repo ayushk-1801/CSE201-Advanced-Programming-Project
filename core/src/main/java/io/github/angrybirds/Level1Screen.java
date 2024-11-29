@@ -120,7 +120,8 @@ public class Level1Screen implements Screen, ContactListener {
         }
     }
 
-    public void loadGameState() {
+//    java
+public void loadGameState() {
     try (BufferedReader reader = new BufferedReader(new FileReader("storage/lvl1.txt"))) {
         GameState gameState = new GameState();
         gameState.score = Integer.parseInt(reader.readLine());
@@ -158,10 +159,20 @@ public class Level1Screen implements Screen, ContactListener {
                 Body body = getBodyForImage(image);
                 body.setTransform(bodyState.x, bodyState.y, 0);
                 body.setActive(bodyState.active);
-                if (!stage.getActors().contains(image, true)) {
-                    stage.addActor(image); // Ensure the image is added back to the stage only if not already present
-                }
             } else {
+                if (image.equals(pig)) {
+                    destroyPigBody = true;
+                    pig.setPosition(-1000, -1000);
+                } else if (image.equals(woodVertical1)) {
+                    destroyBlock1Body = true;
+                    woodVertical1.setPosition(-1000, -1000);
+                } else if (image.equals(woodVertical2)) {
+                    destroyBlock2Body = true;
+                    woodVertical2.setPosition(-1000, -1000);
+                } else if (image.equals(woodHorizontal)) {
+                    destroyBlock3Body = true;
+                    woodHorizontal.setPosition(-1000, -1000);
+                }
                 stage.getActors().removeValue(image, true); // Remove the image from the stage if it is dead
             }
         }
@@ -291,18 +302,20 @@ public class Level1Screen implements Screen, ContactListener {
         // Create two vertical wood blocks (fort sides)
         woodVertical1 = new Sprite(woodVerticalTexture);
         woodVertical2 = new Sprite(woodVerticalTexture);
+
+
+// Create a horizontal wood block (fort top)
+        woodHorizontal = new Sprite(woodHorizontalTexture);
         woodVertical1.setPosition(Gdx.graphics.getWidth() / 2f - 80, pig.getY() - 30);
         woodVertical2.setPosition(Gdx.graphics.getWidth() / 2f + pig.getWidth() - 30, pig.getY() - 30);
         woodVertical1.setPosition(woodVertical1.getX() + 400, woodVertical1.getY() + 35);
         woodVertical2.setPosition(woodVertical2.getX() + 400, woodVertical2.getY() + 35);
-        woodVertical1Body = createRectangularBody(woodVertical1, false, DENSITY, FRICTION, RESTITUTION);
-        woodVertical2Body = createRectangularBody(woodVertical2, false, DENSITY, FRICTION, RESTITUTION);
-
-// Create a horizontal wood block (fort top)
-        woodHorizontal = new Sprite(woodHorizontalTexture);
         woodHorizontal.setPosition(Gdx.graphics.getWidth() / 2f - 20, pig.getY() + pig.getHeight() - 10);
         woodHorizontal.setPosition(woodHorizontal.getX() + 310, woodHorizontal.getY() + 115);
+        woodVertical1Body = createRectangularBody(woodVertical1, false, DENSITY, FRICTION, RESTITUTION);
+        woodVertical2Body = createRectangularBody(woodVertical2, false, DENSITY, FRICTION, RESTITUTION);
         woodHorizontalBody = createRectangularBody(woodHorizontal, false, DENSITY, FRICTION, RESTITUTION);
+
         // Create the slingshot and position it on the left side of the screen
         slingshot = new Image(slingshotTexture);
         slingshot.setSize(slingshot.getWidth() / 5, slingshot.getHeight() / 5);
@@ -382,6 +395,7 @@ public class Level1Screen implements Screen, ContactListener {
         font = new BitmapFont();
         font.setColor(com.badlogic.gdx.graphics.Color.BLACK);
 
+
         if (loadGame) {
             loadGameState();
         }
@@ -394,7 +408,6 @@ public class Level1Screen implements Screen, ContactListener {
             currentBirdBody = createCircularBody(currentBird, DENSITY, FRICTION, RESTITUTION);
             stage.addActor(currentBird);
         }
-        launched =false;
     }
 
     private void handleInput() {
@@ -443,7 +456,6 @@ public class Level1Screen implements Screen, ContactListener {
             launchTime = TimeUtils.nanoTime();
             // Reset dragging state
             isDragging = false;
-            launched=true;
         }
     }
 
@@ -637,7 +649,6 @@ public class Level1Screen implements Screen, ContactListener {
             setNextBird();
         }
 
-
         if (currentBird != null && currentBird.getY() < 0) {
             stage.getActors().removeValue(currentBird, true);
             setNextBird();
@@ -673,12 +684,12 @@ public class Level1Screen implements Screen, ContactListener {
 
 
         // Render debug information
-     debugRenderer.render(world, stage.getViewport().getCamera().combined.scl(PPM));
+        debugRenderer.render(world, stage.getViewport().getCamera().combined.scl(PPM));
     }
 
     private void checkAbility() {
         // Check if the user clicked anywhere on the screen
-        if (Gdx.input.justTouched()&&launched) {
+        if (Gdx.input.justTouched()) {
             // Check if the current bird is Chuck
             if (currentBird.equals(chuckBird)) {
                 // Ensure the bird is launched and a time delay has passed
@@ -696,42 +707,6 @@ public class Level1Screen implements Screen, ContactListener {
                     launched = false; // Or use a separate flag like `abilityUsed = true;`
                 }
             }
-            else if (currentBird == bombBird) {
-                // Check if the screen is being clicked and the bird has been launched
-                if (Gdx.input.isTouched() && launched) {
-                    // Get the bomb's current position
-                    Vector2 bombPosition = bombBirdBody.getPosition();
-    
-                        Vector2 bodyPosition = pigBody.getPosition();
-    
-                        float distance = bombPosition.dst(bodyPosition);
-            
-                        if (distance <= 50f) {
-                            pigHealth -= 100;
-                            }
-    
-                        
-                        
-                        bodyPosition = woodVertical1Body.getPosition();
-                        distance = bombPosition.dst(bodyPosition);
-                        if (distance <= 50f) {
-                            blockHealth1-=100;
-                        }
-                        bodyPosition = woodVertical2Body.getPosition();
-                        distance = bombPosition.dst(bodyPosition);
-                        if (distance <= 50f) {
-                            blockHealth2-=100;
-                        }
-                        bodyPosition = woodHorizontalBody.getPosition();
-                        distance = bombPosition.dst(bodyPosition);
-                        if (distance <= 50f) {
-                            blockHealth3-=100;
-                        }
-                        bombBird.setVisible(false);
-                        bombBirdBody.setLinearVelocity(0,0);
-                    }
-                }
-                launched=false;
         }
     }
 

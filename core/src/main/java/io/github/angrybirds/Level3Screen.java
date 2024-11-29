@@ -298,7 +298,7 @@ public class Level3Screen implements Screen, ContactListener {
 
         pig2 = new Image(pigTexture);
         pig2.setPosition(Gdx.graphics.getWidth() / 2f + pig2.getWidth() / 2, Gdx.graphics.getHeight() / 2f);
-        pig2.moveBy(350, 0);
+        pig2.moveBy(350, -230);
         pig2Body = createCircularBody(pig2, DENSITY, FRICTION, RESTITUTION);
 
         helmetPigOnBlock = new Image(helmetPigTexture);
@@ -307,29 +307,30 @@ public class Level3Screen implements Screen, ContactListener {
         helmetPigOnBlock.setSize(helmetPigOnBlock.getWidth() / 2, helmetPigOnBlock.getHeight() / 2);
         helmetPigOnBlockBody = createCircularBody(helmetPigOnBlock, DENSITY, FRICTION, RESTITUTION);
 
-//        gunPig = new Image(gunPigTexture);
-//        gunPig.setPosition(450, 450);
-//        gunPigBody = createCircularBody(gunPig, DENSITY, FRICTION, RESTITUTION);
-
-        // Create two vertical wood blocks (fort sides)
-        woodVertical1 = new Sprite(stoneVerticalTexture);
+// Create two vertical wood blocks (fort sides)
+        woodVertical1 = new Sprite(woodVerticalTexture);
         woodVertical2 = new Sprite(stoneVerticalTexture);
+
+// Set positions
         woodVertical1.setPosition(Gdx.graphics.getWidth() / 2f - 80, pig1.getY() - 30);
         woodVertical2.setPosition(Gdx.graphics.getWidth() / 2f + pig1.getWidth() - 30, pig1.getY() - 30);
+
+// Move images to adjust final positions
         woodVertical1.setPosition(woodVertical1.getX() + 400, woodVertical1.getY() + 35);
         woodVertical2.setPosition(woodVertical2.getX() + 400, woodVertical2.getY() + 35);
-//        woodVertical1.moveBy(400, 35);
-//        woodVertical2.moveBy(400, 35);
+
+// Make woodVertical2 the same size as woodVertical1
+        woodVertical2.setSize(woodVertical1.getWidth(), woodVertical1.getHeight());  // Ensure same size
+
+// Create bodies with the same size
         woodVertical1Body = createRectangularBody(woodVertical1, false, DENSITY, FRICTION, RESTITUTION);
         woodVertical2Body = createRectangularBody(woodVertical2, false, DENSITY, FRICTION, RESTITUTION);
 
-        // Create a horizontal wood block (fort top)
-        woodHorizontal = new Sprite(stoneHorizontalTexture);
-        woodHorizontal.setPosition(Gdx.graphics.getWidth() / 2f - 20, pig1.getY() + pig1.getHeight());
-        woodHorizontal.setPosition(woodHorizontal.getX() + 290, woodHorizontal.getY() + 200);
-//        woodHorizontal.moveBy(310, 115);
+// Create a horizontal wood block (fort top)
+        woodHorizontal = new Sprite(woodHorizontalTexture);
+        woodHorizontal.setPosition(Gdx.graphics.getWidth() / 2f - 20, pig1.getY() + pig1.getHeight() - 10);
+        woodHorizontal.translate(310, 115);
         woodHorizontalBody = createRectangularBody(woodHorizontal, false, DENSITY, FRICTION, RESTITUTION);
-
         // Create the slingshot and position it on the left side of the screen
         slingshot = new Image(slingshotTexture);
         slingshot.setSize(slingshot.getWidth() / 5, slingshot.getHeight() / 5);
