@@ -68,6 +68,7 @@ public class Level3Screen implements Screen, ContactListener {
     private long timeOfContact = -1;
     private Box2DDebugRenderer debugRenderer;
     private ShapeRenderer shapeRenderer;
+    private boolean launched=false;
 
     private Queue<Body> bodiesToDeactivate;
 
@@ -283,6 +284,7 @@ public class Level3Screen implements Screen, ContactListener {
         Texture bombBirdTexture = new Texture("birds_piggies/bomb.png");
         Texture saveTexture = new Texture("buttons/save.png");
         Texture glassVerticalTexture = new Texture("materials/glass.png");
+        Texture kingPig=new Texture("birds_piggies/k.png");
 
         // Create the pigs and position them inside the fort
         pig1 = new Image(pigTexture);
@@ -292,7 +294,7 @@ public class Level3Screen implements Screen, ContactListener {
 
         helmetPig = new Image(helmetPigTexture);
         helmetPig.setPosition(Gdx.graphics.getWidth() / 2f + 60, Gdx.graphics.getHeight() / 2f);
-        helmetPig.moveBy(400, -400);
+        helmetPig.moveBy(430, -400);
         helmetPig.setSize(helmetPig.getWidth() / 2, helmetPig.getHeight() / 2);
         helmetPigBody = createCircularBody(helmetPig, DENSITY, FRICTION, RESTITUTION);
 
@@ -301,10 +303,10 @@ public class Level3Screen implements Screen, ContactListener {
         pig2.moveBy(350, -230);
         pig2Body = createCircularBody(pig2, DENSITY, FRICTION, RESTITUTION);
 
-        helmetPigOnBlock = new Image(helmetPigTexture);
+        helmetPigOnBlock = new Image(kingPig);
         helmetPigOnBlock.setPosition(Gdx.graphics.getWidth() / 2f - 100, Gdx.graphics.getHeight() / 2f);
-        helmetPigOnBlock.moveBy(350, -400);
-        helmetPigOnBlock.setSize(helmetPigOnBlock.getWidth() / 2, helmetPigOnBlock.getHeight() / 2);
+        helmetPigOnBlock.moveBy(300, -400);
+        helmetPigOnBlock.setSize(helmetPigOnBlock.getWidth() / 4, helmetPigOnBlock.getHeight() / 4);
         helmetPigOnBlockBody = createCircularBody(helmetPigOnBlock, DENSITY, FRICTION, RESTITUTION);
 
 // Create two vertical wood blocks (fort sides)
@@ -431,6 +433,7 @@ public class Level3Screen implements Screen, ContactListener {
             currentBirdBody = createCircularBody(currentBird, DENSITY, FRICTION, RESTITUTION);
             stage.addActor(currentBird);
         }
+        launched =false;
     }
 
     private void handleInput() {
@@ -480,6 +483,7 @@ public class Level3Screen implements Screen, ContactListener {
             launchTime = TimeUtils.nanoTime();
             // Reset dragging state
             isDragging = false;
+            launched =true;
         }
     }
 
@@ -664,7 +668,7 @@ public class Level3Screen implements Screen, ContactListener {
         if (isDragging) {
             drawTrajectory();
         }
-
+        ability();
         if (launchTime != -1 && TimeUtils.nanoTime() - launchTime > 10 * 1000000000L) {
             currentBirdBody.setLinearVelocity(0, 0);  // Stop the bird's movement
             currentBirdBody.setAngularVelocity(0);    // Stop any rotation
@@ -739,6 +743,84 @@ public class Level3Screen implements Screen, ContactListener {
 
         shapeRenderer.end();
     }
+    private void ability() {
+        // Check if the user clicked anywhere on the screen
+        if (Gdx.input.justTouched()&&launched) {
+           // Check if the current bird is Chuck
+           if (currentBird.equals(chuckBird)) {
+               // Ensure the bird is launched and a time delay has passed
+               if (launched && TimeUtils.nanoTime() - launchTime > 500000000L) {
+                   // Get the bird's current velocity
+                   Vector2 currentVelocity = currentBirdBody.getLinearVelocity();
+   
+                   // Double the velocity
+                   Vector2 newVelocity = currentVelocity.scl(2f);
+   
+                   // Apply the new velocity to the bird
+                   currentBirdBody.setLinearVelocity(newVelocity);
+   
+                   // Optionally, prevent repeated activation
+                   launched = false; // Or use a separate flag like `abilityUsed = true;`
+               }
+           }
+           else if (currentBird == bombBird) {
+               // Check if the screen is being clicked and the bird has been launched
+               if ( launched&&TimeUtils.nanoTime() - launchTime > 500000000L) {
+                   // Get the bomb's current position
+                   Vector2 bombPosition = currentBirdBody.getPosition();
+   
+                       Vector2 bodyPosition = pig1Body.getPosition();
+   
+                       float distance = bombPosition.dst(bodyPosition);
+           
+                       if (distance <= 50f) {
+                           pigHealth1 -= 100;
+                           }
+   
+                       bodyPosition = pig2Body.getPosition();
+                       distance = bombPosition.dst(bodyPosition);
+                       if (distance <= 50f) {
+                           pigHealth2 -= 100;
+                       }
+                       bodyPosition = helmetPigBody.getPosition();
+                       distance = bombPosition.dst(bodyPosition);
+                       if (distance <= 50f) {
+                           pigHealth3 -= 100;
+                       }
+                       bodyPosition = helmetPigOnBlockBody.getPosition();
+                       distance = bombPosition.dst(bodyPosition);
+                       if (distance <= 50f) {
+                           pigHealth4 -= 100;
+                       }
+                       bodyPosition = woodVertical1Body.getPosition();
+                       distance = bombPosition.dst(bodyPosition);
+                       if (distance <= 50f) {
+                           blockHealth1-=100;
+                       }
+                       bodyPosition = woodVertical2Body.getPosition();
+                       distance = bombPosition.dst(bodyPosition);
+                       if (distance <= 50f) {
+                           blockHealth2-=100;
+                       }
+                       bodyPosition = woodHorizontalBody.getPosition();
+                       distance = bombPosition.dst(bodyPosition);
+                       if (distance <= 50f) {
+                           blockHealth3-=100;
+                       }
+                       Vector2 currentVelocity = currentBirdBody.getLinearVelocity();
+   
+                       // Double the velocity
+                       Vector2 newVelocity = currentVelocity.scl(0.5f);
+       
+                       // Apply the new velocity to the bird
+                       currentBirdBody.setLinearVelocity(newVelocity);
+                       
+                   }
+                   launched = false;
+                   
+               }
+               }
+           }
 
 //    public void checkContact() {
 //        if (isContact(currentBirdBody, pig1Body)) {
