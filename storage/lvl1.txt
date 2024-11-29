@@ -3,7 +3,7 @@
 false
 -1
 2
-pig,13.110779,1.6716664,true,false
-woodVertical1,12.859393,1.9668422,true,false
-woodVertical2,15.353097,1.5214951,true,false
-woodHorizontal,13.539654,3.5597188,false,false
+pig,13.727853,1.6756731,true,false
+woodVertical1,14.045562,1.9893144,true,false
+woodVertical2,15.343098,1.5202606,true,false
+woodHorizontal,13.518554,3.5557194,true,false

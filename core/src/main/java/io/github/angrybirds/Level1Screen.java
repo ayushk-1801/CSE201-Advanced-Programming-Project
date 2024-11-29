@@ -628,9 +628,15 @@ public void loadGameState() {
         stage.act(Gdx.graphics.getDeltaTime());
         batch.begin();
         batch.draw(bgImage, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        woodVertical1.draw(batch);
-        woodVertical2.draw(batch);
-        woodHorizontal.draw(batch);
+        if(!destroyBlock1Body){
+            woodVertical1.draw(batch);
+        }
+        if(!destroyBlock2Body){
+            woodVertical2.draw(batch);
+        }
+        if(!destroyBlock3Body){
+            woodHorizontal.draw(batch);
+        }
         font.draw(batch, "" + score + " ", 530, 1080 - 40);
         batch.end();
         stage.draw();
