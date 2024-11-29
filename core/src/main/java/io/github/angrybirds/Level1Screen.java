@@ -390,12 +390,11 @@ public void loadGameState() {
         stage.addActor(skip);
         stage.addActor(save);
         stage.addActor(currentBird);
-        stage.addActor(redBird);
 
         font = new BitmapFont();
         font.setColor(com.badlogic.gdx.graphics.Color.BLACK);
 
-
+        launched =false;
         if (loadGame) {
             loadGameState();
         }
@@ -456,6 +455,7 @@ public void loadGameState() {
             launchTime = TimeUtils.nanoTime();
             // Reset dragging state
             isDragging = false;
+            launched = true;
         }
     }
 
@@ -689,7 +689,7 @@ public void loadGameState() {
 
     private void checkAbility() {
         // Check if the user clicked anywhere on the screen
-        if (Gdx.input.justTouched()) {
+        if (Gdx.input.justTouched() && launched) {
             // Check if the current bird is Chuck
             if (currentBird.equals(chuckBird)) {
                 // Ensure the bird is launched and a time delay has passed
@@ -707,6 +707,42 @@ public void loadGameState() {
                     launched = false; // Or use a separate flag like `abilityUsed = true;`
                 }
             }
+            else if (currentBird == bombBird) {
+                // Check if the screen is being clicked and the bird has been launched
+                if (Gdx.input.isTouched() && launched) {
+                    // Get the bomb's current position
+                    Vector2 bombPosition = bombBirdBody.getPosition();
+
+                    Vector2 bodyPosition = pigBody.getPosition();
+
+                    float distance = bombPosition.dst(bodyPosition);
+
+                    if (distance <= 50f) {
+                        pigHealth -= 100;
+                    }
+
+
+
+                    bodyPosition = woodVertical1Body.getPosition();
+                    distance = bombPosition.dst(bodyPosition);
+                    if (distance <= 50f) {
+                        blockHealth1-=100;
+                    }
+                    bodyPosition = woodVertical2Body.getPosition();
+                    distance = bombPosition.dst(bodyPosition);
+                    if (distance <= 50f) {
+                        blockHealth2-=100;
+                    }
+                    bodyPosition = woodHorizontalBody.getPosition();
+                    distance = bombPosition.dst(bodyPosition);
+                    if (distance <= 50f) {
+                        blockHealth3-=100;
+                    }
+                    bombBird.setVisible(false);
+                    bombBirdBody.setLinearVelocity(0,0);
+                }
+            }
+            launched=false;
         }
     }
 
