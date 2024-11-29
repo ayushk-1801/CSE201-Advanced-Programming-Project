@@ -390,6 +390,9 @@ public class Level2Screen implements Screen, ContactListener {
 
         setNextBird();
 
+        font = new BitmapFont();
+        font.setColor(com.badlogic.gdx.graphics.Color.BLACK);
+
         // Add actors to the stage
         stage.addActor(slingshot);
 //        stage.addActor(woodVertical1);
@@ -635,6 +638,8 @@ public class Level2Screen implements Screen, ContactListener {
         woodVertical1.draw(batch);
         woodVertical2.draw(batch);
         woodHorizontal.draw(batch);
+        font.draw(batch, "" + score + " ", 530, 1080 - 40);
+
         batch.end();
         stage.draw();
 
