@@ -22,21 +22,18 @@ public class DefeatMenu3 implements Screen {
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
 
-        // Load textures for buttons
         Texture bgTexture = new Texture("background/pause_bg.png");
         Texture resumeTexture = new Texture("buttons/resume.png");
         Texture menuTexture = new Texture("buttons/menu.png");
         Texture restartTexture = new Texture("buttons/restart.png");
         Texture defeatTexture = new Texture("ui/defeat.png");
 
-        // Create buttons and images
         bg = new Image(bgTexture);
         resumeButton = new Image(resumeTexture);
         menuButton = new Image(menuTexture);
         restartButton = new Image(restartTexture);
         defeatImage = new Image(defeatTexture);
 
-        // Set positions and sizes
         bg.setSize(Gdx.graphics.getWidth() / 4, Gdx.graphics.getHeight());
         bg.setPosition(Gdx.graphics.getWidth() / 2 - bg.getWidth() / 2, 0);
 
@@ -56,7 +53,6 @@ public class DefeatMenu3 implements Screen {
         defeatImage.setPosition(Gdx.graphics.getWidth() / 2 - defeatImage.getWidth() / 2, Gdx.graphics.getHeight() - defeatImage.getHeight() - 20);
         defeatImage.setScaling(com.badlogic.gdx.utils.Scaling.fit);
 
-        // Add listeners to buttons
         resumeButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -78,7 +74,6 @@ public class DefeatMenu3 implements Screen {
             }
         });
 
-        // Add actors to the stage
         stage.addActor(bg);
         stage.addActor(resumeButton);
         stage.addActor(menuButton);

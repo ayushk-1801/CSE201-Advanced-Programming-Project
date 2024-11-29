@@ -14,7 +14,7 @@ public class GameProgress {
     }
 
     public int getUnlockedLevel() {
-        return prefs.getInteger(LEVEL_KEY, 3); // Default to level 1
+        return prefs.getInteger(LEVEL_KEY, 3);
     }
 
     public void unlockNextLevel() {

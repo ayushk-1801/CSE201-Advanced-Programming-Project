@@ -21,19 +21,16 @@ public class PauseScreen3 implements Screen {
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
 
-        // Load textures for buttons
         Texture bgTexture = new Texture("background/pause_bg.png");
         Texture resumeTexture = new Texture("buttons/resume.png");
         Texture menuTexture = new Texture("buttons/menu.png");
         Texture restartTexture = new Texture("buttons/restart.png");
 
-        // Create buttons
         bg = new Image(bgTexture);
         resumeButton = new Image(resumeTexture);
         menuButton = new Image(menuTexture);
         restartButton = new Image(restartTexture);
 
-        // Add listeners to buttons
         bg.setPosition(0, 0);
         bg.setSize(Gdx.graphics.getWidth()/4 , Gdx.graphics.getHeight());
 
@@ -67,7 +64,6 @@ public class PauseScreen3 implements Screen {
             }
         });
 
-        // Add table to stage
         stage.addActor(bg);
         stage.addActor(resumeButton);
         stage.addActor(menuButton);

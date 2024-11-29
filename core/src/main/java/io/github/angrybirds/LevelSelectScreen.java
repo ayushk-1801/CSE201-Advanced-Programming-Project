@@ -33,14 +33,12 @@ public class LevelSelectScreen implements Screen {
         skin = new Skin(Gdx.files.internal("uiskin.json"));
         gameProgress = new GameProgress();
 
-        // Load textures for level buttons
         Texture level1Texture = new Texture("buttons/level1.png");
         Texture level2Texture = new Texture("buttons/level2.png");
         Texture level3Texture = new Texture("buttons/level3.png");
         Texture backTexture = new Texture("buttons/back.png");
         Texture titleTexture = new Texture("ui/sel_level.png");
 
-        // Create and scale down level buttons
         level1Button = new Image(level1Texture);
         level2Button = new Image(level2Texture);
         level3Button = new Image(level3Texture);
@@ -54,7 +52,6 @@ public class LevelSelectScreen implements Screen {
         title.setSize(500, 300);
         title.setScaling(Scaling.fit);
 
-        // Position buttons horizontally (spaced evenly)
         float spacing = 50;
         float totalWidth = level1Button.getWidth() * 3 + spacing * 2;
         float startX = Gdx.graphics.getWidth() / 2f - totalWidth / 2f;
@@ -66,7 +63,6 @@ public class LevelSelectScreen implements Screen {
         backButton.setPosition(50, Gdx.graphics.getHeight() - backButton.getHeight() - 50);
         title.setPosition(Gdx.graphics.getWidth() / 2f - title.getWidth() / 2, Gdx.graphics.getHeight() - title.getHeight() + 30);
 
-        // Add listeners to buttons
         level1Button.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {

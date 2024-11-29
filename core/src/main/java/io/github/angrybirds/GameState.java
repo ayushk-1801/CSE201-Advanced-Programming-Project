@@ -10,7 +10,7 @@ public class GameState implements Serializable {
     public int pigCount;
     public boolean contactDetected;
     public long timeOfContact;
-    public int birdCount; // Add bird count field
+    public int birdCount;
 
     public static class BodyState implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -18,6 +18,6 @@ public class GameState implements Serializable {
     public float x;
     public float y;
     public boolean active;
-    public boolean dead; // Add dead field
+    public boolean dead;
 }
 }
