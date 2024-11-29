@@ -82,7 +82,7 @@ public class LoadLevelScreen implements Screen {
         level3Button.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new Level3Screen());
+                ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new Level3Screen(true));
             }
         });
 

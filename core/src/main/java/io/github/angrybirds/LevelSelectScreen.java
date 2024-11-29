@@ -74,27 +74,19 @@ public class LevelSelectScreen implements Screen {
             }
         });
 
-        if (gameProgress.getUnlockedLevel() >= 2) {
-            level2Button.addListener(new ClickListener() {
-                @Override
-                public void clicked(InputEvent event, float x, float y) {
-                    ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new Level2Screen());
-                }
-            });
-        } else {
-            level2Button.setColor(1, 1, 1, 0.5f); // Dim the button to indicate it's locked
-        }
+        level2Button.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new Level2Screen());
+            }
+        });
 
-        if (gameProgress.getUnlockedLevel() >= 3) {
-            level3Button.addListener(new ClickListener() {
-                @Override
-                public void clicked(InputEvent event, float x, float y) {
-                    ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new Level3Screen());
-                }
-            });
-        } else {
-            level3Button.setColor(1, 1, 1, 0.5f); // Dim the button to indicate it's locked
-        }
+        level3Button.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                ((com.badlogic.gdx.Game) Gdx.app.getApplicationListener()).setScreen(new Level3Screen());
+            }
+        });
 
         backButton.addListener(new ClickListener() {
             @Override
